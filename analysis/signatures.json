@@ -1,0 +1,852 @@
+{
+  "version": "2.1",
+  "description": "APKStudioAI 2.1 known malware signatures and patterns",
+  "signatures": {
+    "anubis": {
+      "name": "Anubis Banking Trojan",
+      "type": "banker",
+      "description": "Android banking trojan with overlay and accessibility abuse",
+      "indicators": [
+        "anubis",
+        "com.anubis",
+        "AnubisBot",
+        "AnubisService",
+        "com.google.android.gm",
+        "inject.html",
+        "keylogger",
+        "accessibility"
+      ],
+      "mitre": ["T1556.004", "T1056.001", "T1539"]
+    },
+    "cerberus": {
+      "name": "Cerberus Banking Trojan",
+      "type": "banker",
+      "description": "Android banking malware with remote access capabilities",
+      "indicators": [
+        "cerberus",
+        "CerberusBot",
+        "com.cerberus",
+        "accessibility",
+        "overlay",
+        "keylogger",
+        "sms",
+        "contacts",
+        "c2"
+      ],
+      "mitre": ["T1556.004", "T1056.001", "T1040", "T1538"]
+    },
+    "teabot": {
+      "name": "TeaBot (Anatsa)",
+      "type": "banker",
+      "description": "Android banking trojan with streaming screen capture",
+      "indicators": [
+        "teabot",
+        "anatsa",
+        "TeaBot",
+        "stream",
+        "screen",
+        "MediaProjection",
+        "accessibility",
+        "overlay",
+        "inject"
+      ],
+      "mitre": ["T1556.004", "T1056.001", "T1505.003"]
+    },
+    "xenomorph": {
+      "name": "Xenomorph Banking Trojan",
+      "type": "banker",
+      "description": "Android banking malware with ATS capabilities",
+      "indicators": [
+        "xenomorph",
+        "Xenomorph",
+        "ATS",
+        "automatic",
+        "transfer",
+        "accessibility",
+        "overlay",
+        "cookie",
+        "session"
+      ],
+      "mitre": ["T1556.004", "T1539", "T1056.001"]
+    },
+    "errac": {
+      "name": "ERMAC Banking Trojan",
+      "type": "banker",
+      "description": "Android banking malware targeting 400+ apps",
+      "indicators": [
+        "ermac",
+        "ERMAC",
+        "overlay",
+        "accessibility",
+        "keylogger",
+        "sms",
+        "contacts",
+        "2fa",
+        "authenticator"
+      ],
+      "mitre": ["T1556.004", "T1056.001", "T1538"]
+    },
+    "hook": {
+      "name": "Hook Banking Trojan",
+      "type": "banker",
+      "description": "ERMAC successor with VNC and RAT capabilities",
+      "indicators": [
+        "hook",
+        "HookBot",
+        "VNC",
+        "remote",
+        "control",
+        "accessibility",
+        "overlay",
+        "stream",
+        "ERMAC"
+      ],
+      "mitre": ["T1556.004", "T1040", "T1056.001", "T1505.003"]
+    },
+    "spymax": {
+      "name": "SpyMax RAT",
+      "type": "rat",
+      "description": "Android RAT with extensive surveillance capabilities",
+      "indicators": [
+        "spymax",
+        "SpyMax",
+        "SpyNote",
+        "SpyNote",
+        "remote",
+        "control",
+        "keylogger",
+        "camera",
+        "microphone",
+        "location",
+        "contacts",
+        "sms",
+        "call",
+        "file",
+        "shell"
+      ],
+      "mitre": ["T1040", "T1539", "T1538", "T1056.001", "T1505.001"]
+    },
+    "spynote": {
+      "name": "SpyNote RAT",
+      "type": "rat",
+      "description": "Popular Android RAT builder",
+      "indicators": [
+        "spynote",
+        "SpyNote",
+        "remote",
+        "admin",
+        "keylogger",
+        "camera",
+        "mic",
+        "location",
+        "contacts",
+        "sms",
+        "call",
+        "shell",
+        "file"
+      ],
+      "mitre": ["T1040", "T1539", "T1538", "T1056.001", "T1505.001"]
+    },
+    "ahmyth": {
+      "name": "AhMyth RAT",
+      "type": "rat",
+      "description": "Open-source Android RAT",
+      "indicators": [
+        "ahmyth",
+        "AhMyth",
+        "RAT",
+        "remote",
+        "control",
+        "keylogger",
+        "camera",
+        "microphone",
+        "location",
+        "contacts",
+        "sms"
+      ],
+      "mitre": ["T1040", "T1539", "T1538", "T1056.001"]
+    },
+    "androspy": {
+      "name": "AndroSpy RAT",
+      "type": "rat",
+      "description": "Android spyware/RAT",
+      "indicators": [
+        "androrat",
+        "AndroRat",
+        "remote",
+        "control",
+        "shell",
+        "camera",
+        "mic",
+        "location",
+        "contacts",
+        "sms",
+        "call"
+      ],
+      "mitre": ["T1040", "T1539", "T1538", "T1056.001"]
+    },
+    "droidjack": {
+      "name": "DroidJack RAT",
+      "type": "rat",
+      "description": "Android RAT with binder",
+      "indicators": [
+        "droidjack",
+        "DroidJack",
+        "bind",
+        "remote",
+        "control",
+        "shell",
+        "camera",
+        "mic",
+        "location"
+      ],
+      "mitre": ["T1040", "T1505.001", "T1539"]
+    },
+    "triout": {
+      "name": "Triout Spyware",
+      "type": "spyware",
+      "description": "Spyware with call recording and location tracking",
+      "indicators": [
+        "triout",
+        "Triout",
+        "call",
+        "record",
+        "location",
+        "camera",
+        "microphone",
+        "contacts",
+        "sms"
+      ],
+      "mitre": ["T1539", "T1538", "T1614.001", "T1505.003"]
+    },
+    "exobot": {
+      "name": "Exobot Banking Trojan",
+      "type": "banker",
+      "description": "Android banking trojan with web injects",
+      "indicators": [
+        "exobot",
+        "Exobot",
+        "inject",
+        "overlay",
+        "webview",
+        "accessibility",
+        "keylogger",
+        "sms"
+      ],
+      "mitre": ["T1556.004", "T1056.001", "T1539"]
+    },
+    "marcher": {
+      "name": "Marcher Banking Trojan",
+      "type": "banker",
+      "description": "Android banking malware with overlay attacks",
+      "indicators": [
+        "marcher",
+        "Marcher",
+        "overlay",
+        "inject",
+        "webview",
+        "accessibility",
+        "bank",
+        "phishing"
+      ],
+      "mitre": ["T1556.004", "T1056.001", "T1539"]
+    },
+    "bankbot": {
+      "name": "BankBot Banking Trojan",
+      "type": "banker",
+      "description": "Android banking trojan family",
+      "indicators": [
+        "bankbot",
+        "BankBot",
+        "overlay",
+        "inject",
+        "accessibility",
+        "bank",
+        "phishing",
+        "credentials"
+      ],
+      "mitre": ["T1556.004", "T1056.001", "T1539"]
+    },
+    "gustuff": {
+      "name": "Gustuff Banking Trojan",
+      "type": "banker",
+      "description": "Android banking malware with ATS",
+      "indicators": [
+        "gustuff",
+        "Gustuff",
+        "ATS",
+        "automatic",
+        "transfer",
+        "accessibility",
+        "overlay",
+        "bank"
+      ],
+      "mitre": ["T1556.004", "T1539", "T1056.001"]
+    },
+    "biota": {
+      "name": "Biota (MazarBot)",
+      "type": "rat",
+      "description": "Android RAT with Tor C2",
+      "indicators": [
+        "biota",
+        "mazarbot",
+        "MazarBot",
+        "tor",
+        "onion",
+        "remote",
+        "control",
+        "shell",
+        "camera",
+        "mic"
+      ],
+      "mitre": ["T1040", "T1090.001", "T1539", "T1538"]
+    },
+    "tordow": {
+      "name": "Tordow Trojan",
+      "type": "trojan",
+      "description": "Rooting trojan with Tor C2",
+      "indicators": [
+        "tordow",
+        "Tordow",
+        "root",
+        "exploit",
+        "tor",
+        "onion",
+        "device",
+        "admin",
+        "overlay"
+      ],
+      "mitre": ["T1068", "T1090.001", "T1547.001", "T1556.004"]
+    },
+    "hummingbad": {
+      "name": "HummingBad",
+      "type": "trojan",
+      "description": "Rooting malware with persistent infection",
+      "indicators": [
+        "hummingbad",
+        "HummingBad",
+        "root",
+        "exploit",
+        "persistent",
+        "install",
+        "package",
+        "adware"
+      ],
+      "mitre": ["T1068", "T1547.001", "T1505.001"]
+    },
+    "xavier": {
+      "name": "Xavier Adware",
+      "type": "trojan",
+      "description": "Adware with code downloading capabilities",
+      "indicators": [
+        "xavier",
+        "Xavier",
+        "adware",
+        "download",
+        "dynamic",
+        "code",
+        "load",
+        "DexClassLoader"
+      ],
+      "mitre": ["T1105", "T1059.001", "T1505.001"]
+    },
+    "joker": {
+      "name": "Joker Malware",
+      "type": "trojan",
+      "description": "Fleeceware with subscription fraud",
+      "indicators": [
+        "joker",
+        "Joker",
+        "subscription",
+        "billing",
+        "fleeceware",
+        "sms",
+        "premium",
+        "Otp",
+        "verification"
+      ],
+      "mitre": ["T1538", "T1489", "T1547.001"]
+    },
+    "eventbot": {
+      "name": "EventBot Banking Trojan",
+      "type": "banker",
+      "description": "Android banking malware abusing accessibility",
+      "indicators": [
+        "eventbot",
+        "EventBot",
+        "accessibility",
+        "overlay",
+        "keylogger",
+        "2fa",
+        "authenticator",
+        "bank"
+      ],
+      "mitre": ["T1556.004", "T1056.001", "T1539"]
+    },
+    "alien": {
+      "name": "Alien Banking Trojan",
+      "type": "banker",
+      "description": "Android banking malware from Cerberus family",
+      "indicators": [
+        "alien",
+        "Alien",
+        "Cerberus",
+        "overlay",
+        "accessibility",
+        "keylogger",
+        "sms",
+        "bank"
+      ],
+      "mitre": ["T1556.004", "T1056.001", "T1539"]
+    },
+    "hydra": {
+      "name": "Hydra Banking Trojan",
+      "type": "banker",
+      "description": "Android banking malware with teamviewer-like features",
+      "indicators": [
+        "hydra",
+        "Hydra",
+        "teamviewer",
+        "remote",
+        "view",
+        "accessibility",
+        "overlay",
+        "bank"
+      ],
+      "mitre": ["T1556.004", "T1040", "T1056.001"]
+    },
+    "flubot": {
+      "name": "FluBot",
+      "type": "trojan",
+      "description": "SMS-spreading trojan with overlay",
+      "indicators": [
+        "flubot",
+        "FluBot",
+        "sms",
+        "spread",
+        "overlay",
+        "accessibility",
+        "contacts",
+        "package",
+        "install"
+      ],
+      "mitre": ["T1538", "T1556.004", "T1505.001", "T1547.001"]
+    },
+    "teabot_anatsa": {
+      "name": "TeaBot / Anatsa",
+      "type": "banker",
+      "description": "Streaming screen capture banking trojan",
+      "indicators": [
+        "teabot",
+        "anatsa",
+        "stream",
+        "screen",
+        "MediaProjection",
+        "accessibility",
+        "overlay",
+        "bank"
+      ],
+      "mitre": ["T1556.004", "T1056.001", "T1505.003"]
+    },
+    "sharkbot": {
+      "name": "SharkBot Banking Trojan",
+      "type": "banker",
+      "description": "Android banking malware with ATS",
+      "indicators": [
+        "sharkbot",
+        "SharkBot",
+        "ATS",
+        "automatic",
+        "transfer",
+        "accessibility",
+        "overlay",
+        "bank"
+      ],
+      "mitre": ["T1556.004", "T1539", "T1056.001"]
+    },
+    "vultur": {
+      "name": "Vultur Banking Trojan",
+      "type": "banker",
+      "description": "Android banking malware with VNC",
+      "indicators": [
+        "vultur",
+        "Vultur",
+        "VNC",
+        "remote",
+        "view",
+        "accessibility",
+        "overlay",
+        "bank",
+        "stream"
+      ],
+      "mitre": ["T1556.004", "T1040", "T1056.001"]
+    },
+    "blackrock": {
+      "name": "BlackRock Banking Trojan",
+      "type": "banker",
+      "description": "Android banking malware from Xerxes family",
+      "indicators": [
+        "blackrock",
+        "BlackRock",
+        "Xerxes",
+        "overlay",
+        "accessibility",
+        "keylogger",
+        "sms",
+        "bank"
+      ],
+      "mitre": ["T1556.004", "T1056.001", "T1539"]
+    },
+    "medusa": {
+      "name": "Medusa (TangleBot)",
+      "type": "banker",
+      "description": "Android banking trojan with RAT capabilities",
+      "indicators": [
+        "medusa",
+        "Medusa",
+        "TangleBot",
+        "remote",
+        "control",
+        "overlay",
+        "accessibility",
+        "keylogger",
+        "bank"
+      ],
+      "mitre": ["T1556.004", "T1040", "T1056.001", "T1539"]
+    },
+    "oscorp": {
+      "name": "Oscorp Banking Trojan",
+      "type": "banker",
+      "description": "Android banking malware with ATS",
+      "indicators": [
+        "oscorp",
+        "Oscorp",
+        "ATS",
+        "automatic",
+        "transfer",
+        "accessibility",
+        "overlay",
+        "bank"
+      ],
+      "mitre": ["T1556.004", "T1539", "T1056.001"]
+    },
+    "ubear": {
+      "name": "UBear Spyware",
+      "type": "spyware",
+      "description": "Commercial spyware",
+      "indicators": [
+        "ubear",
+        "UBear",
+        "spyware",
+        "monitor",
+        "location",
+        "call",
+        "sms",
+        "contact"
+      ],
+      "mitre": ["T1539", "T1538", "T1614.001"]
+    },
+    "flexispy": {
+      "name": "FlexiSPY",
+      "type": "spyware",
+      "description": "Commercial spyware with extensive monitoring",
+      "indicators": [
+        "flexispy",
+        "FlexiSPY",
+        "spyware",
+        "monitor",
+        "call",
+        "record",
+        "location",
+        "sms",
+        "contact",
+        "camera",
+        "mic"
+      ],
+      "mitre": ["T1539", "T1538", "T1614.001", "T1505.003"]
+    },
+    "mspy": {
+      "name": "mSpy",
+      "type": "spyware",
+      "description": "Commercial monitoring software",
+      "indicators": [
+        "mspy",
+        "mSpy",
+        "monitor",
+        "location",
+        "call",
+        "sms",
+        "contact",
+        "web",
+        "history"
+      ],
+      "mitre": ["T1539", "T1538", "T1614.001"]
+    },
+    "clevguard": {
+      "name": "ClevGuard",
+      "type": "spyware",
+      "description": "Parental control / spyware",
+      "indicators": [
+        "clevguard",
+        "ClevGuard",
+        "kidsguard",
+        "KidsGuard",
+        "monitor",
+        "location",
+        "call",
+        "sms",
+        "contact"
+      ],
+      "mitre": ["T1539", "T1538", "T1614.001"]
+    },
+    "mobileorder": {
+      "name": "MobileOrder Dropper",
+      "type": "dropper",
+      "description": "Dropper installing additional payloads",
+      "indicators": [
+        "mobileorder",
+        "MobileOrder",
+        "dropper",
+        "download",
+        "install",
+        "payload",
+        "DexClassLoader",
+        "PackageManager"
+      ],
+      "mitre": ["T1105", "T1505.001", "T1059.001"]
+    },
+    "mandrake": {
+      "name": "Mandrake Spyware",
+      "type": "spyware",
+      "description": "Sophisticated Android spyware",
+      "indicators": [
+        "mandrake",
+        "Mandrake",
+        "spyware",
+        "screen",
+        "record",
+        "keylogger",
+        "overlay",
+        "accessibility",
+        "root"
+      ],
+      "mitre": ["T1539", "T1056.001", "T1556.004", "T1068"]
+    },
+    "pandora": {
+      "name": "Pandora Botnet",
+      "type": "rat",
+      "description": "Android botnet for DDoS",
+      "indicators": [
+        "pandora",
+        "Pandora",
+        "botnet",
+        "ddos",
+        "flood",
+        "tcp",
+        "udp",
+        "http",
+        "shell"
+      ],
+      "mitre": ["T1498", "T1499", "T1059.001"]
+    },
+    "moqhao": {
+      "name": "MoqHao (XLoader)",
+      "type": "trojan",
+      "description": "SMS-spreading trojan with C2",
+      "indicators": [
+        "moqhao",
+        "MoqHao",
+        "XLoader",
+        "sms",
+        "spread",
+        "c2",
+        "contacts",
+        "package",
+        "install"
+      ],
+      "mitre": ["T1538", "T1505.001", "T1071.001"]
+    },
+    "tianyu": {
+      "name": "Tianyu Spyware",
+      "type": "spyware",
+      "description": "Chinese spyware",
+      "indicators": [
+        "tianyu",
+        "Tianyu",
+        "spyware",
+        "monitor",
+        "location",
+        "call",
+        "sms",
+        "contact"
+      ],
+      "mitre": ["T1539", "T1538", "T1614.001"]
+    },
+    "ghostctrl": {
+      "name": "GhostCtrl",
+      "type": "rat",
+      "description": "Android RAT with three modules",
+      "indicators": [
+        "ghostctrl",
+        "GhostCtrl",
+        "RAT",
+        "remote",
+        "control",
+        "camera",
+        "mic",
+        "location",
+        "shell"
+      ],
+      "mitre": ["T1040", "T1539", "T1538", "T1059.001"]
+    },
+    "androspy_lite": {
+      "name": "AndroSpy Lite",
+      "type": "rat",
+      "description": "Lightweight Android RAT",
+      "indicators": [
+        "androrat",
+        "AndroRat",
+        "lite",
+        "remote",
+        "control",
+        "shell",
+        "camera",
+        "mic",
+        "location"
+      ],
+      "mitre": ["T1040", "T1539", "T1538", "T1059.001"]
+    },
+    "droidbot": {
+      "name": "DroidBot",
+      "type": "rat",
+      "description": "Android RAT with Telegram C2",
+      "indicators": [
+        "droidbot",
+        "DroidBot",
+        "telegram",
+        "bot",
+        "remote",
+        "control",
+        "shell",
+        "camera",
+        "mic"
+      ],
+      "mitre": ["T1040", "T1071.001", "T1539", "T1538"]
+    },
+    "telegram_rat": {
+      "name": "Telegram-based RAT",
+      "type": "rat",
+      "description": "RAT using Telegram for C2",
+      "indicators": [
+        "telegram",
+        "bot",
+        "api.telegram.org",
+        "chat_id",
+        "sendMessage",
+        "getUpdates",
+        "remote",
+        "control"
+      ],
+      "mitre": ["T1071.001", "T1040", "T1539"]
+    },
+    "generic_banker": {
+      "name": "Generic Banking Trojan Patterns",
+      "type": "banker",
+      "description": "Common patterns in banking trojans",
+      "indicators": [
+        "overlay",
+        "inject",
+        "webview",
+        "loadUrl",
+        "evaluateJavascript",
+        "addJavascriptInterface",
+        "accessibility",
+        "keylogger",
+        "bank",
+        "credential",
+        "login",
+        "password"
+      ],
+      "mitre": ["T1556.004", "T1056.001", "T1539"]
+    },
+    "generic_rat": {
+      "name": "Generic RAT Patterns",
+      "type": "rat",
+      "description": "Common patterns in Android RATs",
+      "indicators": [
+        "remote",
+        "control",
+        "shell",
+        "exec",
+        "Runtime",
+        "ProcessBuilder",
+        "Socket",
+        "ServerSocket",
+        "camera",
+        "microphone",
+        "location",
+        "contacts",
+        "sms",
+        "call",
+        "file"
+      ],
+      "mitre": ["T1040", "T1539", "T1538", "T1059.001"]
+    },
+    "generic_spyware": {
+      "name": "Generic Spyware Patterns",
+      "type": "spyware",
+      "description": "Common patterns in spyware",
+      "indicators": [
+        "monitor",
+        "track",
+        "record",
+        "location",
+        "call",
+        "sms",
+        "contact",
+        "camera",
+        "microphone",
+        "keylogger",
+        "screen",
+        "accessibility"
+      ],
+      "mitre": ["T1539", "T1538", "T1614.001", "T1505.003"]
+    },
+    "generic_dropper": {
+      "name": "Generic Dropper Patterns",
+      "type": "dropper",
+      "description": "Common patterns in droppers",
+      "indicators": [
+        "download",
+        "install",
+        "payload",
+        "DexClassLoader",
+        "PathClassLoader",
+        "PackageManager",
+        "INSTALL_PACKAGES",
+        "REQUEST_INSTALL_PACKAGES",
+        "FileOutputStream",
+        "assets",
+        "raw"
+      ],
+      "mitre": ["T1105", "T1505.001", "T1059.001"]
+    },
+    "generic_downloader": {
+      "name": "Generic Downloader Patterns",
+      "type": "downloader",
+      "description": "Common patterns in downloaders",
+      "indicators": [
+        "download",
+        "HttpURLConnection",
+        "OkHttpClient",
+        "WebSocket",
+        "Socket",
+        "DexClassLoader",
+        "defineClass",
+        "loadClass",
+        "Class.forName"
+      ],
+      "mitre": ["T1105", "T1059.001"]
+    }
+  }
+}

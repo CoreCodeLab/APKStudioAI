@@ -1,0 +1,45 @@
+# Python
+__pycache__/
+*.py[cod]
+*$py.class
+.pytest_cache/
+*.pytest_cache/
+
+# Virtual environment
+venv/
+env/
+ENV/
+
+# Distribution packages
+*.zip
+*.egg-info/
+dist/
+build/
+
+# IDE
+.vscode/
+.idea/
+*.swp
+*.swo
+
+# OS
+.DS_Store
+Thumbs.db
+
+# Project specific - generated/large files
+*.apk
+reports/
+workspace/
+logs/
+cache/
+
+# Tools (downloaded binaries)
+tools/jadx/
+tools/apktool.jar
+
+# Local config overrides
+config.local.json
+
+# Temporary files
+*.tmp
+*.temp
