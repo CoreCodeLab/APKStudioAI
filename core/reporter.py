@@ -96,7 +96,7 @@ class ReportGenerator:
         }
         risk_color = risk_colors.get(level, '#9e9e9e')
 
-        html = f"""<!DOCTYPE html>
+        html_content = f"""<!DOCTYPE html>
 <html lang="fr">
 <head>
     <meta charset="UTF-8">
@@ -175,36 +175,36 @@ class ReportGenerator:
 """
 
         # APK Information
-        html += self._html_section_apk_info(result, manifest)
+        html_content += self._html_section_apk_info(result, manifest)
 
         # Permissions
-        html += self._html_section_permissions(perm_analysis)
+        html_content += self._html_section_permissions(perm_analysis)
 
         # Manifest Components
-        html += self._html_section_manifest(manifest)
+        html_content += self._html_section_manifest(manifest)
 
         # DEX Analysis
-        html += self._html_section_dex(result.get('dex', {}))
+        html_content += self._html_section_dex(result.get('dex', {}))
 
         # Native Libraries
-        html += self._html_section_native(native)
+        html_content += self._html_section_native(native)
 
         # JNI Analysis
-        html += self._html_section_jni(jni)
+        html_content += self._html_section_jni(jni)
 
         # Network IOCs
-        html += self._html_section_network(network, strings)
+        html_content += self._html_section_network(network, strings)
 
         # Malware Detections
-        html += self._html_section_malware(malware)
+        html_content += self._html_section_malware(malware)
 
         # AI Analysis
-        html += self._html_section_ai(ai)
+        html_content += self._html_section_ai(ai)
 
         # Risk Factors
-        html += self._html_section_risk_factors(risk)
+        html_content += self._html_section_risk_factors(risk)
 
-        html += """
+        html_content += """
         </div>
         <div class="footer">
             Généré par APKStudioAI 2.1 - Advanced Android Malware Analysis Platform<br>
@@ -221,7 +221,7 @@ class ReportGenerator:
 </body>
 </html>"""
 
-        return html
+        return html_content
 
     def _html_section_apk_info(self, result: Dict, manifest: Dict) -> str:
         """HTML section for APK info"""
@@ -241,7 +241,7 @@ class ReportGenerator:
 
     def _html_section_permissions(self, perm_analysis: Dict) -> str:
         """HTML section for permissions"""
-        html = """
+        section_html = """
         <div class="section">
             <h2>🔐 Analyse des Permissions</h2>
             <div class="grid">
@@ -249,9 +249,9 @@ class ReportGenerator:
         for level in ['critical', 'high', 'medium', 'low', 'normal']:
             count = len(perm_analysis.get('by_risk', {}).get(level, []))
             color = {'critical': '#d32f2f', 'high': '#f57c00', 'medium': '#fbc02d', 'low': '#388e3c', 'normal': '#9e9e9e'}.get(level, '#9e9e9e')
-            html += f'<div class="card" style="border-left-color: {color};"><h4>{level.capitalize()}</h4><div class="value" style="color: {color};">{count}</div></div>'
+            section_html += f'<div class="card" style="border-left-color: {color};"><h4>{level.capitalize()}</h4><div class="value" style="color: {color};">{count}</div></div>'
 
-        html += """
+        section_html += """
             </div>
             <h3>Détail des permissions</h3>
             <table>
@@ -262,7 +262,7 @@ class ReportGenerator:
         for level in ['critical', 'high', 'medium', 'low', 'normal']:
             for perm in perm_analysis.get('by_risk', {}).get(level, []):
                 mitre_tags = ''.join(f'<span class="mitre-tag">{html.escape(m)}</span>' for m in perm.get('mitre', []))
-                html += f"""<tr>
+                section_html += f"""<tr>
                     <td><code>{html.escape(perm.get('permission', ''))}</code></td>
                     <td><span class="badge badge-{level}">{level.upper()}</span></td>
                     <td>{html.escape(perm.get('description', ''))}</td>
@@ -270,16 +270,16 @@ class ReportGenerator:
                     <td>{mitre_tags}</td>
                 </tr>"""
 
-        html += """
+        section_html += """
                 </tbody>
             </table>
         </div>
 """
-        return html
+        return section_html
 
     def _html_section_manifest(self, manifest: Dict) -> str:
         """HTML section for manifest components"""
-        html = """
+        section_html = """
         <div class="section">
             <h2>📋 Composants AndroidManifest.xml</h2>
             <table>
@@ -292,14 +292,14 @@ class ReportGenerator:
                 exported = "✓ Oui" if comp.get('exported') else "✗ Non"
                 exp_class = "exported" if comp.get('exported') else "not-exported"
                 perm = comp.get('permission', '—')
-                html += f"""<tr>
+                section_html += f"""<tr>
                     <td>{html.escape(comp_type[:-1].capitalize())}</td>
                     <td><code>{html.escape(comp.get('name', 'N/A'))}</code></td>
                     <td class="{exp_class}">{html.escape(exported)}</td>
                     <td>{html.escape(perm)}</td>
                 </tr>"""
 
-        html += """
+        section_html += """
                 </tbody>
             </table>
             <h3>Propriétés de l'application</h3>
@@ -312,17 +312,17 @@ class ReportGenerator:
             ('Supports Screens', str(manifest.get('supports_screens', 'N/A'))),
         ]
         for label, value in props:
-            html += f'<div class="card"><h4>{label}</h4><div class="value">{html.escape(value)}</div></div>'
+            section_html += f'<div class="card"><h4>{label}</h4><div class="value">{html.escape(value)}</div></div>'
 
-        html += """
+        section_html += """
             </div>
         </div>
 """
-        return html
+        return section_html
 
     def _html_section_dex(self, dex: Dict) -> str:
         """HTML section for DEX analysis"""
-        html = """
+        section_html = """
         <div class="section">
             <h2>📦 Analyse DEX</h2>
             <table>
@@ -330,7 +330,7 @@ class ReportGenerator:
                 <tbody>
 """
         for dex_file in dex.get('dex_files', []):
-            html += f"""<tr>
+            section_html += f"""<tr>
                 <td><code>{html.escape(dex_file.get('name', ''))}</code></td>
                 <td><code>{html.escape(dex_file.get('sha256', '')[:32])}...</code></td>
                 <td>{self._format_size(dex_file.get('size', 0))}</td>
@@ -340,29 +340,29 @@ class ReportGenerator:
                 <td>{dex_file.get('api_level', 'N/A')}</td>
             </tr>"""
 
-        html += """
+        section_html += """
                 </tbody>
             </table>
         </div>
 """
-        return html
+        return section_html
 
     def _html_section_native(self, native: Dict) -> str:
         """HTML section for native libraries"""
-        html = """
+        section_html = """
         <div class="section">
             <h2>🔧 Bibliothèques Natives (ELF)</h2>
 """
         if not native.get('libraries'):
-            html += "<p>Aucune bibliothèque native détectée.</p>"
+            section_html += "<p>Aucune bibliothèque native détectée.</p>"
         else:
-            html += """
+            section_html += """
             <table>
                 <thead><tr><th>Nom</th><th>Architecture</th><th>Chemin</th><th>Taille</th><th>Méthodes JNI</th><th>Exports</th><th>Imports</th></tr></thead>
                 <tbody>
 """
             for lib in native.get('libraries', []):
-                html += f"""<tr>
+                section_html += f"""<tr>
                     <td><code>{html.escape(lib.get('name', ''))}</code></td>
                     <td>{html.escape(lib.get('architecture', ''))}</td>
                     <td><code>{html.escape(lib.get('path', ''))}</code></td>
@@ -372,14 +372,14 @@ class ReportGenerator:
                     <td>{len(lib.get('imports', []))}</td>
                 </tr>"""
 
-            html += """
+            section_html += """
                 </tbody>
             </table>
 """
 
             # Details for each library
             for lib in native.get('libraries', []):
-                html += f"""
+                section_html += f"""
             <div class="collapsible" style="margin-top: 20px; padding: 10px; background: #f8f9fa; border-radius: 4px;">
                 <strong>📄 {html.escape(lib.get('name', ''))} - Détails</strong>
             </div>
@@ -388,7 +388,7 @@ class ReportGenerator:
                 # ELF Header
                 if lib.get('elf_header'):
                     eh = lib['elf_header']
-                    html += f"""
+                    section_html += f"""
                 <h4>En-tête ELF</h4>
                 <div class="grid">
                     <div class="card"><h4>Classe</h4><div class="value">{html.escape(str(eh.get('class', 'N/A')))}</div></div>
@@ -400,41 +400,41 @@ class ReportGenerator:
 """
                 # Sections
                 if lib.get('sections'):
-                    html += "<h4>Sections</h4><table><thead><tr><th>Nom</th><th>Type</th><th>Adresse</th><th>Taille</th><th>Flags</th></tr></thead><tbody>"
+                    section_html += "<h4>Sections</h4><table><thead><tr><th>Nom</th><th>Type</th><th>Adresse</th><th>Taille</th><th>Flags</th></tr></thead><tbody>"
                     for sec in lib['sections'][:20]:
-                        html += f"""<tr><td>{html.escape(sec.get('name', ''))}</td><td>{html.escape(str(sec.get('type', '')))}</td><td>{html.escape(hex(sec.get('addr', 0)))}</td><td>{html.escape(str(sec.get('size', 0)))}</td><td>{html.escape(str(sec.get('flags', '')))}</td></tr>"""
-                    html += "</tbody></table>"
+                        section_html += f"""<tr><td>{html.escape(sec.get('name', ''))}</td><td>{html.escape(str(sec.get('type', '')))}</td><td>{html.escape(hex(sec.get('addr', 0)))}</td><td>{html.escape(str(sec.get('size', 0)))}</td><td>{html.escape(str(sec.get('flags', '')))}</td></tr>"""
+                    section_html += "</tbody></table>"
 
                 # Imports
                 if lib.get('imports'):
-                    html += "<h4>Imports</h4><div class='code'>" + ", ".join(html.escape(i) for i in lib['imports'][:50]) + "</div>"
+                    section_html += "<h4>Imports</h4><div class='code'>" + ", ".join(html.escape(i) for i in lib['imports'][:50]) + "</div>"
 
                 # Exports
                 if lib.get('exports'):
-                    html += "<h4>Exports</h4><div class='code'>" + ", ".join(html.escape(e) for e in lib['exports'][:50]) + "</div>"
+                    section_html += "<h4>Exports</h4><div class='code'>" + ", ".join(html.escape(e) for e in lib['exports'][:50]) + "</div>"
 
                 # Strings
                 if lib.get('interesting_strings'):
-                    html += "<h4>Chaînes intéressantes</h4><div class='code'>" + "<br>".join(html.escape(s) for s in lib['interesting_strings'][:30]) + "</div>"
+                    section_html += "<h4>Chaînes intéressantes</h4><div class='code'>" + "<br>".join(html.escape(s) for s in lib['interesting_strings'][:30]) + "</div>"
 
-                html += "</div>"
+                section_html += "</div>"
 
-        html += """
+        section_html += """
         </div>
 """
-        return html
+        return section_html
 
     def _html_section_jni(self, jni: Dict) -> str:
         """HTML section for JNI analysis"""
-        html = """
+        section_html = """
         <div class="section">
             <h2>🔗 Analyse JNI</h2>
 """
         if not jni.get('libraries'):
-            html += "<p>Aucune analyse JNI disponible.</p>"
+            section_html += "<p>Aucune analyse JNI disponible.</p>"
         else:
             for lib_jni in jni.get('libraries', []):
-                html += f"""
+                section_html += f"""
             <h3>Bibliothèque: {html.escape(lib_jni.get('library', ''))}</h3>
             <div class="grid">
                 <div class="card"><h4>JNI_OnLoad</h4><div class="value">{'✓ Trouvé' if lib_jni.get('jni_onload', {}).get('found') else '✗ Non trouvé'}</div></div>
@@ -445,7 +445,7 @@ class ReportGenerator:
                 # JNI_OnLoad details
                 jni_onload = lib_jni.get('jni_onload', {})
                 if jni_onload.get('found'):
-                    html += f"""
+                    section_html += f"""
             <h4>JNI_OnLoad</h4>
             <div class="code">Adresse: {html.escape(hex(jni_onload.get('address', 0)))}\nSignature: {html.escape(str(jni_onload.get('signature', 'N/A')))}</div>
 """
@@ -453,53 +453,53 @@ class ReportGenerator:
                 # RegisterNatives details
                 reg_natives = lib_jni.get('register_natives', {})
                 if reg_natives.get('found'):
-                    html += f"""
+                    section_html += f"""
             <h4>RegisterNatives</h4>
             <div class="code">Adresse: {html.escape(hex(reg_natives.get('address', 0)))}\nMéthodes enregistrées: {len(reg_natives.get('methods', []))}</div>
 """
                     # Methods table
                     if reg_natives.get('methods'):
-                        html += """
+                        section_html += """
             <table>
                 <thead><tr><th>Classe Java</th><th>Méthode</th><th>Signature JNI</th><th>Fonction native</th><th>Adresse</th></tr></thead>
                 <tbody>
 """
                         for m in reg_natives['methods'][:50]:
-                            html += f"""<tr>
+                            section_html += f"""<tr>
                                 <td><code>{html.escape(m.get('class_name', ''))}</code></td>
                                 <td><code>{html.escape(m.get('method_name', ''))}</code></td>
                                 <td><code>{html.escape(m.get('signature', ''))}</code></td>
                                 <td><code>{html.escape(m.get('native_function', ''))}</code></td>
                                 <td>{html.escape(hex(m.get('address', 0)))}</td>
                             </tr>"""
-                        html += "</tbody></table>"
+                        section_html += "</tbody></table>"
 
                 # Mapped methods
                 if lib_jni.get('mapped_methods'):
-                    html += """
+                    section_html += """
             <h4>Méthodes mappées (Java ↔ Native)</h4>
             <table>
                 <thead><tr><th>Classe Java</th><th>Méthode Java</th><th>Signature JNI</th><th>Fonction native</th><th>Adresse</th></tr></thead>
                 <tbody>
 """
                     for m in lib_jni['mapped_methods'][:50]:
-                        html += f"""<tr>
+                        section_html += f"""<tr>
                             <td><code>{html.escape(m.get('java_class', ''))}</code></td>
                             <td><code>{html.escape(m.get('java_method', ''))}</code></td>
                             <td><code>{html.escape(m.get('jni_signature', ''))}</code></td>
                             <td><code>{html.escape(m.get('native_function', ''))}</code></td>
                             <td>{html.escape(hex(m.get('address', 0)))}</td>
                         </tr>"""
-                    html += "</tbody></table>"
+                    section_html += "</tbody></table>"
 
-        html += """
+        section_html += """
         </div>
 """
-        return html
+        return section_html
 
     def _html_section_network(self, network: Dict, strings: Dict) -> str:
         """HTML section for network IOCs"""
-        html = """
+        section_html = """
         <div class="section">
             <h2>🌐 Indicateurs de Compromission Réseau</h2>
             <div class="grid">
@@ -517,104 +517,104 @@ class ReportGenerator:
         ]
 
         for label, value in stats:
-            html += f'<div class="card"><h4>{label}</h4><div class="value">{value}</div></div>'
+            section_html += f'<div class="card"><h4>{label}</h4><div class="value">{value}</div></div>'
 
-        html += """
+        section_html += """
             </div>
 """
 
         # URLs
         if network.get('urls'):
-            html += """
+            section_html += """
             <h3>URLs détectées</h3>
             <table>
                 <thead><tr><th>URL</th><th>Source</th></tr></thead>
                 <tbody>
 """
             for url in network['urls'][:50]:
-                html += f"<tr><td><code>{html.escape(url)}</code></td><td>Strings</td></tr>"
-            html += "</tbody></table>"
+                section_html += f"<tr><td><code>{html.escape(url)}</code></td><td>Strings</td></tr>"
+            section_html += "</tbody></table>"
 
         # Domains
         if network.get('domains'):
-            html += """
+            section_html += """
             <h3>Domaines</h3>
             <table>
                 <thead><tr><th>Domaine</th><th>Source</th></tr></thead>
                 <tbody>
 """
             for domain in network['domains'][:50]:
-                html += f"<tr><td><code>{html.escape(domain)}</code></td><td>Strings</td></tr>"
-            html += "</tbody></table>"
+                section_html += f"<tr><td><code>{html.escape(domain)}</code></td><td>Strings</td></tr>"
+            section_html += "</tbody></table>"
 
         # IPs
         if network.get('ips'):
-            html += """
+            section_html += """
             <h3>Adresses IP</h3>
             <table>
                 <thead><tr><th>IP</th><th>Source</th></tr></thead>
                 <tbody>
 """
             for ip in network['ips'][:20]:
-                html += f"<tr><td><code>{html.escape(ip)}</code></td><td>Strings</td></tr>"
-            html += "</tbody></table>"
+                section_html += f"<tr><td><code>{html.escape(ip)}</code></td><td>Strings</td></tr>"
+            section_html += "</tbody></table>"
 
         # Firebase
         if network.get('firebase_config'):
-            html += """
+            section_html += """
             <h3>Configuration Firebase</h3>
             <div class="code">
 """
             for fb in network['firebase_config']:
-                html += html.escape(json.dumps(fb, indent=2)) + "\n\n"
-            html += "</div>"
+                section_html += html.escape(json.dumps(fb, indent=2)) + "\n\n"
+            section_html += "</div>"
 
         # Telegram
         if network.get('telegram_bots'):
-            html += """
+            section_html += """
             <h3>⚠️ Bots Telegram détectés (C2 potentiel)</h3>
             <table>
                 <thead><tr><th>Token/Config</th><th>Source</th></tr></thead>
                 <tbody>
 """
             for tel in network['telegram_bots']:
-                html += f"<tr><td><code>{html.escape(str(tel)[:100])}</code></td><td>Strings</td></tr>"
-            html += "</tbody></table>"
+                section_html += f"<tr><td><code>{html.escape(str(tel)[:100])}</code></td><td>Strings</td></tr>"
+            section_html += "</tbody></table>"
 
         # C2 Config
         if network.get('c2_config'):
-            html += """
+            section_html += """
             <h3>Configurations C2</h3>
             <div class="code">
 """
             for c2 in network['c2_config']:
-                html += html.escape(json.dumps(c2, indent=2)) + "\n\n"
-            html += "</div>"
+                section_html += html.escape(json.dumps(c2, indent=2)) + "\n\n"
+            section_html += "</div>"
 
         # Decoded strings
         if strings.get('decoded_strings'):
-            html += """
+            section_html += """
             <h3>Chaînes décodées (Base64/Hex/XOR)</h3>
             <table>
                 <thead><tr><th>Méthode</th><th>Original</th><th>Décodé</th></tr></thead>
                 <tbody>
 """
             for ds in strings['decoded_strings'][:30]:
-                html += f"""<tr>
+                section_html += f"""<tr>
                     <td><span class="badge badge-low">{html.escape(ds.get('method', '?'))}</span></td>
                     <td><code>{html.escape(ds.get('original', '')[:80])}...</code></td>
                     <td><code>{html.escape(ds.get('decoded', '')[:200])}</code></td>
                 </tr>"""
-            html += "</tbody></table>"
+            section_html += "</tbody></table>"
 
-        html += """
+        section_html += """
         </div>
 """
-        return html
+        return section_html
 
     def _html_section_malware(self, malware: Dict) -> str:
         """HTML section for malware detections"""
-        html = """
+        section_html = """
         <div class="section">
             <h2>🦠 Détections de Malware</h2>
             <div class="grid">
@@ -622,9 +622,9 @@ class ReportGenerator:
         summary = malware.get('summary', {})
         for key in ['total', 'confirmed', 'likely', 'possible', 'suspected']:
             color = {'confirmed': '#d32f2f', 'likely': '#f57c00', 'possible': '#fbc02d', 'suspected': '#388e3c', 'total': '#1e3a5f'}.get(key, '#1e3a5f')
-            html += f'<div class="card" style="border-left-color: {color};"><h4>{key.capitalize()}</h4><div class="value" style="color: {color};">{summary.get(key, 0)}</div></div>'
+            section_html += f'<div class="card" style="border-left-color: {color};"><h4>{key.capitalize()}</h4><div class="value" style="color: {color};">{summary.get(key, 0)}</div></div>'
 
-        html += """
+        section_html += """
             </div>
 
             <h3>Détections détaillées</h3>
@@ -635,7 +635,7 @@ class ReportGenerator:
         for det in malware.get('detections', []):
             classification = det.get('classification', 'suspected')
             mitre_tags = ''.join(f'<span class="mitre-tag">{html.escape(m)}</span>' for m in det.get('mitre_techniques', []))
-            html += f"""<tr>
+            section_html += f"""<tr>
                 <td><strong>{html.escape(det.get('category', '').upper())}</strong></td>
                 <td><span class="badge badge-{classification}">{classification.upper()}</span></td>
                 <td>{det.get('confidence_score', 0)}%</td>
@@ -644,7 +644,7 @@ class ReportGenerator:
                 <td>{mitre_tags}</td>
             </tr>"""
 
-        html += """
+        section_html += """
                 </tbody>
             </table>
 """
@@ -652,7 +652,7 @@ class ReportGenerator:
         # Evidence details for confirmed/likely
         for det in malware.get('detections', []):
             if det.get('classification') in ['confirmed', 'likely']:
-                html += f"""
+                section_html += f"""
             <div class="collapsible" style="margin-top: 15px;">
                 <strong>🔍 Preuves pour {html.escape(det.get('category', '').upper())} ({html.escape(det.get('classification', ''))})</strong>
             </div>
@@ -662,43 +662,43 @@ class ReportGenerator:
                 for ev_type in ['indicators', 'capabilities', 'confirmed', 'hypothesis', 'unverifiable']:
                     items = ev.get(ev_type, [])
                     if items:
-                        html += f"<h4>{ev_type.capitalize()}</h4>"
+                        section_html += f"<h4>{ev_type.capitalize()}</h4>"
                         for item in items[:10]:
-                            html += f"<div class='evidence-section'><code>{html.escape(json.dumps(item, ensure_ascii=False))}</code></div>"
+                            section_html += f"<div class='evidence-section'><code>{html.escape(json.dumps(item, ensure_ascii=False))}</code></div>"
 
-                html += "</div>"
+                section_html += "</div>"
 
         # Matched signatures
         if malware.get('matched_signatures'):
-            html += """
+            section_html += """
             <h3>Signatures connues détectées</h3>
             <table>
                 <thead><tr><th>Signature</th><th>Type</th><th>Indicateurs matchés</th><th>Confiance</th></tr></thead>
                 <tbody>
 """
             for sig in malware['matched_signatures']:
-                html += f"""<tr>
+                section_html += f"""<tr>
                     <td><strong>{html.escape(sig.get('name', ''))}</strong></td>
                     <td>{html.escape(sig.get('type', ''))}</td>
                     <td>{sig.get('match_count', 0)}</td>
                     <td>{sig.get('confidence', 0)}%</td>
                 </tr>"""
-            html += "</tbody></table>"
+            section_html += "</tbody></table>"
 
-        html += """
+        section_html += """
         </div>
 """
-        return html
+        return section_html
 
     def _html_section_ai(self, ai: Dict) -> str:
         """HTML section for AI analysis"""
-        html = """
+        section_html = """
         <div class="section">
             <h2>🤖 Analyse IA (Ollama)</h2>
 """
         if ai.get('success'):
             analysis = ai.get('analysis', {})
-            html += f"""
+            section_html += f"""
             <div class="grid">
                 <div class="card"><h4>Catégorie</h4><div class="value">{html.escape(analysis.get('malware_category', 'inconnu').upper())}</div></div>
                 <div class="card"><h4>Confiance</h4><div class="value">{analysis.get('confidence', 0)}%</div></div>
@@ -715,59 +715,59 @@ class ReportGenerator:
             <ul>
 """
             for ind in analysis.get('key_indicators', []):
-                html += f"<li>{html.escape(ind)}</li>"
+                section_html += f"<li>{html.escape(ind)}</li>"
 
-            html += """
+            section_html += """
             </ul>
 
             <h3>Recommandations</h3>
             <ul>
 """
             for rec in analysis.get('recommendations', []):
-                html += f"<li>{html.escape(rec)}</li>"
+                section_html += f"<li>{html.escape(rec)}</li>"
 
-            html += """
+            section_html += """
             </ul>
 
             <h3>Limites</h3>
             <div class="code">{html.escape(analysis.get('limitations', 'N/A'))}</div>
 """
         else:
-            html += f"<p class='badge badge-critical'>Échec de l'analyse IA: {html.escape(ai.get('error', 'Inconnue'))}</p>"
+            section_html += f"<p class='badge badge-critical'>Échec de l'analyse IA: {html.escape(ai.get('error', 'Inconnue'))}</p>"
 
-        html += """
+        section_html += """
         </div>
 """
-        return html
+        return section_html
 
     def _html_section_risk_factors(self, risk: Dict) -> str:
         """HTML section for risk factors"""
-        html = """
+        section_html = """
         <div class="section">
             <h2>⚠️ Facteurs de risque identifiés</h2>
 """
         factors = risk.get('risk_factors', [])
         if not factors:
-            html += "<p>Aucun facteur de risque majeur identifié.</p>"
+            section_html += "<p>Aucun facteur de risque majeur identifié.</p>"
         else:
-            html += """
+            section_html += """
             <table>
                 <thead><tr><th>Sévérité</th><th>Facteur</th><th>Détail</th></tr></thead>
                 <tbody>
 """
             for rf in factors:
                 severity = rf.get('severity', 'low').upper()
-                html += f"""<tr>
+                section_html += f"""<tr>
                     <td><span class="badge badge-{rf.get('severity', 'low')}">{severity}</span></td>
                     <td><strong>{html.escape(rf.get('factor', ''))}</strong></td>
                     <td>{html.escape(rf.get('detail', ''))}</td>
                 </tr>"""
-            html += "</tbody></table>"
+            section_html += "</tbody></table>"
 
-        html += """
+        section_html += """
         </div>
 """
-        return html
+        return section_html
 
     def _build_txt_report(self, result: Dict[str, Any]) -> str:
         """Build text report"""
