@@ -24,7 +24,7 @@ class SettingsPage(BasePage):
         self.tabview = ctk.CTkTabview(self)
         self.tabview.grid(row=1, column=0, sticky="nsew", padx=20, pady=(0, 20))
 
-        tabs = ["General", "Analysis", "AI/ML", "Dynamic", "Threat Intel", "GUI", "Advanced"]
+        tabs = ["General", "Analysis", "AI/ML", "Dynamic", "Threat Intel", "REA", "GUI", "Advanced"]
         for tab in tabs:
             self.tabview.add(tab)
             self.tabview.tab(tab).grid_columnconfigure(0, weight=1)
@@ -39,6 +39,7 @@ class SettingsPage(BasePage):
         self._build_ai_tab(self.tab_frames["AI/ML"])
         self._build_dynamic_tab(self.tab_frames["Dynamic"])
         self._build_threat_intel_tab(self.tab_frames["Threat Intel"])
+        self._build_rea_tab(self.tab_frames["REA"])
         self._build_gui_tab(self.tab_frames["GUI"])
         self._build_advanced_tab(self.tab_frames["Advanced"])
 
@@ -201,6 +202,64 @@ class SettingsPage(BasePage):
         self.feed_interval_var = ctk.IntVar(value=self.config.get("threat_intel", {}).get("feed_interval", 24))
         ctk.CTkEntry(row, textvariable=self.feed_interval_var, width=100).pack(side="left")
 
+    def _build_rea_tab(self, frame):
+        """Build REA (Reverse Engineering Assistant) settings tab"""
+        rea_config = self.config.get("rea", {})
+
+        # REA Enabled
+        self.rea_enabled_var = ctk.BooleanVar(value=rea_config.get("enabled", True))
+        ctk.CTkCheckBox(frame, text="Enable REA Enhanced Reverse Engineering",
+                       variable=self.rea_enabled_var, font=ctk.CTkFont(size=13, weight="bold")).pack(anchor="w", padx=15, pady=15)
+
+        # GHIDRA Path
+        row = ctk.CTkFrame(frame)
+        row.pack(fill="x", padx=15, pady=10)
+        ctk.CTkLabel(row, text="Ghidra Install Dir:", width=150, anchor="w").pack(side="left", padx=10)
+        self.ghidra_path_var = ctk.StringVar(value=rea_config.get("ghidra_path", ""))
+        ctk.CTkEntry(row, textvariable=self.ghidra_path_var, width=400).pack(side="left", padx=10)
+        ctk.CTkButton(row, text="Browse", width=80, command=lambda: self._browse_dir(self.ghidra_path_var)).pack(side="left")
+
+        # Skill Path (optional)
+        row = ctk.CTkFrame(frame)
+        row.pack(fill="x", padx=15, pady=10)
+        ctk.CTkLabel(row, text="REA Skill Path:", width=150, anchor="w").pack(side="left", padx=10)
+        self.skill_path_var = ctk.StringVar(value=rea_config.get("skill_path", ""))
+        ctk.CTkEntry(row, textvariable=self.skill_path_var, width=400).pack(side="left", padx=10)
+        ctk.CTkButton(row, text="Browse", width=80, command=lambda: self._browse_dir(self.skill_path_var)).pack(side="left")
+
+        # Analyze Native Libraries
+        self.rea_native_var = ctk.BooleanVar(value=rea_config.get("analyze_native_libs", True))
+        ctk.CTkCheckBox(frame, text="Analyze Native Libraries with Ghidra",
+                       variable=self.rea_native_var).pack(anchor="w", padx=15, pady=10)
+
+        # Analyze DEX (future JADX provider)
+        self.rea_dex_var = ctk.BooleanVar(value=rea_config.get("analyze_dex", False))
+        ctk.CTkCheckBox(frame, text="Analyze DEX with JADX Provider (requires REA_JADX_MCP_JAR)",
+                       variable=self.rea_dex_var).pack(anchor="w", padx=15, pady=10)
+
+        # Pattern Search
+        self.rea_pattern_var = ctk.BooleanVar(value=rea_config.get("pattern_search", True))
+        ctk.CTkCheckBox(frame, text="Search for Suspicious Patterns in Native Code",
+                       variable=self.rea_pattern_var).pack(anchor="w", padx=15, pady=10)
+
+        # Max Analysis Time
+        row = ctk.CTkFrame(frame)
+        row.pack(fill="x", padx=15, pady=10)
+        ctk.CTkLabel(row, text="Max Analysis Time (s):", width=150, anchor="w").pack(side="left", padx=10)
+        self.rea_timeout_var = ctk.IntVar(value=rea_config.get("max_analysis_time_sec", 300))
+        ctk.CTkEntry(row, textvariable=self.rea_timeout_var, width=100).pack(side="left")
+
+        # MCP Command
+        row = ctk.CTkFrame(frame)
+        row.pack(fill="x", padx=15, pady=10)
+        ctk.CTkLabel(row, text="MCP Command:", width=150, anchor="w").pack(side="left", padx=10)
+        self.mcp_cmd_var = ctk.StringVar(value=rea_config.get("mcp_command", "npx -y rea-agents@latest mcp"))
+        ctk.CTkEntry(row, textvariable=self.mcp_cmd_var, width=400).pack(side="left", padx=10)
+
+        # Status info
+        ctk.CTkLabel(frame, text="Note: Ghidra path can also be set via GHIDRA_INSTALL_DIR or APKSTUDIO_GHIDRA_PATH env vars",
+                    text_color=("gray50", "gray70"), font=ctk.CTkFont(size=11)).pack(anchor="w", padx=15, pady=15)
+
     def _build_gui_tab(self, frame):
         # Window size
         row = ctk.CTkFrame(frame)
@@ -306,6 +365,17 @@ class SettingsPage(BasePage):
         config.set("threat_intel.malwarebazaar_enabled", self.mbazaar_var.get())
         config.set("threat_intel.threatfox_enabled", self.threatfox_var.get())
         config.set("threat_intel.feed_interval", self.feed_interval_var.get())
+
+        # REA settings
+        config.set("rea.enabled", self.rea_enabled_var.get())
+        config.set("rea.ghidra_path", self.ghidra_path_var.get())
+        config.set("rea.skill_path", self.skill_path_var.get())
+        config.set("rea.analyze_native_libs", self.rea_native_var.get())
+        config.set("rea.analyze_dex", self.rea_dex_var.get())
+        config.set("rea.pattern_search", self.rea_pattern_var.get())
+        config.set("rea.max_analysis_time_sec", self.rea_timeout_var.get())
+        config.set("rea.mcp_command", self.mcp_cmd_var.get())
+
         config.set("gui.width", self.width_var.get())
         config.set("gui.height", self.height_var.get())
         config.set("gui.font_size", self.font_size_var.get())

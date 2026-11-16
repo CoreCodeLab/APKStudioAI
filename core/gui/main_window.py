@@ -89,6 +89,7 @@ class MainWindow(ctk.CTk):
             "advanced_static",
             "correlation",
             "reporting",
+            "rea_analysis",
             "settings",
         ]
 
@@ -228,7 +229,7 @@ class MainWindow(ctk.CTk):
             CodeBrowserPage, TimelinePage, BehavioralPage,
             StringsPage, ManifestPage, PermissionsPage,
             ComponentsPage, AdvancedStaticPage, CorrelationPage,
-            ReportingPage, SettingsPage
+            ReportingPage, SettingsPage, REAAnalysisPage
         )
 
         page_map = {
@@ -251,6 +252,7 @@ class MainWindow(ctk.CTk):
             "advanced_static": AdvancedStaticPage,
             "correlation": CorrelationPage,
             "reporting": ReportingPage,
+            "rea_analysis": REAAnalysisPage,
             "settings": SettingsPage,
         }
 

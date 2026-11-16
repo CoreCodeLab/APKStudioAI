@@ -239,7 +239,26 @@
         "correlation_ids": { "type": "boolean" }
       },
       "required": ["level", "json_output", "include_timestamp", "correlation_ids"]
+    },
+    "rea": {
+      "type": "object",
+      "additionalProperties": false,
+      "properties": {
+        "enabled": { "type": "boolean" },
+        "ghidra_path": { "type": "string" },
+        "skill_path": { "type": "string" },
+        "mcp_command": { "type": "string" },
+        "analyze_native_libs": { "type": "boolean" },
+        "analyze_dex": { "type": "boolean" },
+        "pattern_search": { "type": "boolean" },
+        "max_analysis_time_sec": { "type": "integer", "minimum": 10, "maximum": 3600 },
+        "ghidra_scripts": {
+          "type": "array",
+          "items": { "type": "string" }
+        }
+      },
+      "required": ["enabled", "ghidra_path", "skill_path", "mcp_command", "analyze_native_libs", "analyze_dex", "pattern_search", "max_analysis_time_sec", "ghidra_scripts"]
     }
   },
-  "required": ["tools", "ollama", "analysis", "timeouts", "limits", "risk_engine", "scanner", "behavior", "network", "string_analysis", "reporting", "gui", "logging"]
+  "required": ["tools", "ollama", "analysis", "timeouts", "limits", "risk_engine", "scanner", "behavior", "network", "string_analysis", "reporting", "gui", "logging", "rea"]
 }

@@ -34,6 +34,7 @@ from .apkid_engine import APKiDEngine, get_apkid_engine
 from .config_manager import get_config
 from .cache_manager import get_cache
 from .incremental_analyzer import get_incremental_analyzer
+from .rea_analyzer import REAAnalyzer
 from .utils import run_command, calculate_sha256, safe_extract_zip, ProgressTracker
 from .logging_setup import configure_logging, get_module_logger, ScanContext
 from .ai.agent_base import create_agent_manager
@@ -99,6 +100,9 @@ class APKScanner:
         self.androguard_engine = get_androguard_engine(self.config)
         self.apkid_engine = get_apkid_engine(self.config)
 
+        # Initialize REA analyzer for enhanced reverse engineering
+        self.rea_analyzer = REAAnalyzer(self.config)
+
         # Initialize cache manager
         self.cache = get_cache(config_path)
 
@@ -133,7 +137,7 @@ class APKScanner:
         self.stage_weights = self.config.get("scanner", {}).get("stage_weights", {})
         self.default_stage_weights = {
             "archive": 5, "extract": 10, "manifest": 20, "dex": 30, "jadx": 40,
-            "smali": 50, "native": 60, "jni": 65, "strings": 70, "permissions": 75,
+            "smali": 50, "native": 60, "jni": 65, "rea": 67, "strings": 70, "permissions": 75,
             "behavior": 80, "network": 85, "malware": 90, "risk": 95, "ai": 98, "complete": 100
         }
 
@@ -407,10 +411,29 @@ class APKScanner:
                 self._update_progress("jni", message="Analyzing JNI...")
                 jni_result = self._analyze_jni(native_result, jadx_result)
                 result["jni"] = jni_result
-    
+
                 if self.cancelled:
                     return result
-    
+
+                # Stage 8b: REA Analysis (enhanced reverse engineering for native libs)
+                rea_enabled = self.config.get("rea", {}).get("enabled", True)
+                rea_available = self.rea_analyzer.is_available()
+                self.logger.info("rea_stage_check", rea_enabled=rea_enabled, rea_available=rea_available)
+                if rea_enabled and rea_available:
+                    self._update_progress("rea", message="Running REA enhanced reverse engineering...")
+                    rea_result = self.rea_analyzer.analyze_apk_with_rea(str(self.apk_path), str(self.extract_dir))
+                    result["rea"] = rea_result
+                    if rea_result.get("errors"):
+                        result["errors"].extend(rea_result["errors"])
+                    if rea_result.get("warnings"):
+                        result["warnings"].extend(rea_result["warnings"])
+                    self.logger.info("rea_stage_completed", native_libs=len(rea_result.get("native_libraries", [])))
+                else:
+                    self.logger.warning("rea_stage_skipped", rea_enabled=rea_enabled, rea_available=rea_available)
+
+                if self.cancelled:
+                    return result
+
                 # Update context for next group
                 context["result"] = result
     
@@ -861,6 +884,34 @@ def format_text_output(data: Dict) -> str:
         lines.append(f"  Summary: {analysis.get('summary', 'N/A')}")
     else:
         lines.append(f"AI ANALYSIS: {ai.get('error', 'Not available')}")
+
+    # REA Analysis
+    rea = data.get("rea", {})
+    if rea.get("enabled"):
+        lines.append("")
+        lines.append("REA ANALYSIS (Enhanced Reverse Engineering):")
+        native_libs = rea.get("native_libraries", [])
+        lines.append(f"  Native Libraries Analyzed: {len(native_libs)}")
+        for lib in native_libs:
+            lines.append(f"  - {lib.get('name', 'unknown')} ({lib.get('arch', 'unknown')})")
+
+        patterns = rea.get("patterns", [])
+        if patterns:
+            lines.append(f"  Suspicious Patterns Found: {len(patterns)}")
+            for p in patterns[:10]:
+                lines.append(f"    - {p['pattern']} ({p['severity']}): {p['matches']} matches - {p['description']}")
+
+        ghidra_analysis = rea.get("ghidra_analysis", {})
+        if ghidra_analysis:
+            lines.append(f"  Ghidra Analysis: {len(ghidra_analysis)} libraries processed")
+            for lib_name, analysis in ghidra_analysis.items():
+                if analysis.get("success"):
+                    lines.append(f"    - {lib_name}: Success")
+                elif analysis.get("error"):
+                    lines.append(f"    - {lib_name}: {analysis['error']}")
+    elif rea.get("error"):
+        lines.append("")
+        lines.append(f"REA ANALYSIS: {rea['error']}")
 
     return "\n".join(lines)
 

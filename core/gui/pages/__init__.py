@@ -1,6 +1,6 @@
 """
 GUI Pages package for APKStudioAI 2.1
-Exports all 20 page classes.
+Exports all 21 page classes.
 """
 from .dashboard import DashboardPage
 from .static_analysis import StaticAnalysisPage
@@ -22,6 +22,7 @@ from .advanced_static import AdvancedStaticPage
 from .correlation import CorrelationPage
 from .reporting import ReportingPage
 from .settings import SettingsPage
+from .rea_analysis import REAAnalysisPage
 
 __all__ = [
     "DashboardPage",
@@ -44,4 +45,5 @@ __all__ = [
     "CorrelationPage",
     "ReportingPage",
     "SettingsPage",
+    "REAAnalysisPage",
 ]

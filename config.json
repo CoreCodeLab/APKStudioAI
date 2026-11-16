@@ -95,6 +95,7 @@
             "smali": 50,
             "native": 60,
             "jni": 65,
+            "rea": 67,
             "strings": 70,
             "permissions": 75,
             "behavior": 80,
@@ -199,6 +200,17 @@
         "include_all_strings": false,
         "max_evidence_per_category": 20,
         "collapsible_sections": true
+    },
+    "rea": {
+        "enabled": true,
+        "ghidra_path": "",
+        "skill_path": "",
+        "mcp_command": "npx -y rea-agents@latest mcp",
+        "analyze_native_libs": true,
+        "analyze_dex": false,
+        "pattern_search": true,
+        "max_analysis_time_sec": 300,
+        "ghidra_scripts": []
     },
     "gui": {
         "theme": "system",

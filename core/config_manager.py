@@ -248,6 +248,17 @@ class ConfigManager:
                 "font_size": 10,
                 "auto_scroll_logs": True,
                 "show_tooltips": True
+            },
+            "rea": {
+                "enabled": True,
+                "ghidra_path": "",
+                "skill_path": "",
+                "mcp_command": "npx -y rea-agents@latest mcp",
+                "analyze_native_libs": True,
+                "analyze_dex": False,
+                "pattern_search": True,
+                "max_analysis_time_sec": 300,
+                "ghidra_scripts": []
             }
         }
 
@@ -269,6 +280,7 @@ class ConfigManager:
             "APKSTUDIO_OLLAMA_MODEL": ("ollama", "model"),
             "APKSTUDIO_ENABLE_AI": ("analysis", "enable_ai"),
             "APKSTUDIO_CACHE_DIR": ("scanner", "cache", "cache_dir"),
+            "APKSTUDIO_GHIDRA_PATH": ("rea", "ghidra_path"),
             "APKSTUDIO_CONFIG_FILE": None  # Special handling
         }
 
@@ -431,6 +443,7 @@ class ConfigManager:
             ("scanner", "cache", "max_age_days"),
             ("scanner", "cache", "max_size_mb"),
             ("gui", "font_size"),
+            ("rea", "max_analysis_time_sec"),
         ]
 
         for path in numeric_paths:

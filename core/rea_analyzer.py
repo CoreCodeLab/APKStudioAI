@@ -35,6 +35,7 @@ class REAAnalyzer:
         self.results = {}
         self.errors = []
         self.warnings = []
+        self._availability_cache = None  # Cache for is_available()
 
         # Windows uses npx.cmd
         self._npx_cmd = "npx.cmd" if sys.platform == "win32" else "npx"
@@ -53,15 +54,24 @@ class REAAnalyzer:
         )
 
     def is_available(self) -> bool:
-        """Check if REA is available and configured"""
+        """Check if REA is available and configured (cached)"""
         if not self.enabled:
             return False
 
-        # Check if REA CLI is available
+        # Return cached result if available
+        if self._availability_cache is not None:
+            return self._availability_cache
+
+        # Check if REA CLI is available (increased timeout for slower environments)
         try:
-            result = self._run_rea_command(["--version"], timeout=10)
-            return result.returncode == 0
-        except Exception:
+            result = self._run_rea_command(["--version"], timeout=60)
+            self._availability_cache = (result.returncode == 0)
+            if not self._availability_cache:
+                print(f"DEBUG: REA version check failed, returncode={result.returncode}, stderr={result.stderr[:200]}")
+            return self._availability_cache
+        except Exception as e:
+            print(f"DEBUG: REA version check exception: {e}")
+            self._availability_cache = False
             return False
 
     def get_doctor_status(self) -> Dict[str, Any]:
@@ -77,9 +87,10 @@ class REAAnalyzer:
 
     def analyze_apk_with_rea(self, apk_path: str, extract_dir: str) -> Dict[str, Any]:
         """Analyze APK using REA's Ghidra integration for native libraries"""
-        if not self.is_available():
-            self.warnings.append("REA not available, skipping REA analysis")
-            return {"enabled": False, "error": "REA not available"}
+        # Note: availability is checked by caller (scanner), but we check again for safety
+        if not self.enabled:
+            self.warnings.append("REA not enabled, skipping REA analysis")
+            return {"enabled": False, "error": "REA not enabled"}
 
         results = {
             "enabled": True,
