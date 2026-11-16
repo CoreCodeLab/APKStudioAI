@@ -1,0 +1,670 @@
+{
+  "version": "2.1",
+  "description": "APKStudioAI 2.1 behavior analysis rules",
+  "categories": [
+    "suspicious_api_usage",
+    "malware_families",
+    "permission_abuse",
+    "network_iocs",
+    "string_obfuscation",
+    "jni_patterns"
+  ],
+  "rules": {
+    "suspicious_api_usage": {
+      "name": "Suspicious API Usage",
+      "description": "Detects usage of sensitive Android APIs",
+      "patterns": [
+        {
+          "name": "Reflection Usage",
+          "category": "dynamic_code_loading",
+          "severity": "medium",
+          "regex": [
+            "Class\\.forName",
+            "Method\\.invoke",
+            "Field\\.set",
+            "Constructor\\.newInstance",
+            "getDeclaredMethod",
+            "getDeclaredField",
+            "getDeclaredConstructor",
+            "setAccessible\\(true\\)"
+          ],
+          "description": "Reflection can be used for dynamic code loading and obfuscation"
+        },
+        {
+          "name": "Dynamic Class Loading",
+          "category": "dynamic_code_loading",
+          "severity": "high",
+          "regex": [
+            "DexClassLoader",
+            "PathClassLoader",
+            "InMemoryDexClassLoader",
+            "DexFile\\.loadDex",
+            "defineClass",
+            "loadClass"
+          ],
+          "description": "Dynamic class loading allows runtime code execution"
+        },
+        {
+          "name": "Command Execution",
+          "category": "command_execution",
+          "severity": "critical",
+          "regex": [
+            "Runtime\\.getRuntime\\(\\)\\.exec",
+            "ProcessBuilder",
+            "Runtime\\.exec",
+            "shell",
+            "su\\s",
+            "su -c"
+          ],
+          "description": "Command execution can run arbitrary shell commands"
+        },
+        {
+          "name": "Native Methods",
+          "category": "native_code",
+          "severity": "medium",
+          "regex": [
+            "native\\s+",
+            "System\\.loadLibrary",
+            "System\\.load",
+            "JNI_OnLoad",
+            "RegisterNatives",
+            "JNINativeMethod"
+          ],
+          "description": "Native code can hide malicious functionality"
+        },
+        {
+          "name": "WebView JavaScript Bridge",
+          "category": "credential_theft",
+          "severity": "high",
+          "regex": [
+            "addJavascriptInterface",
+            "evaluateJavascript",
+            "loadUrl\\(.*javascript:",
+            "setJavaScriptEnabled\\(true\\)"
+          ],
+          "description": "JavaScript bridges can steal credentials from WebViews"
+        },
+        {
+          "name": "Accessibility Service Abuse",
+          "category": "accessibility_abuse",
+          "severity": "high",
+          "regex": [
+            "AccessibilityService",
+            "canRetrieveWindowContent",
+            "canPerformGestures",
+            "FLAG_REQUEST_TOUCH_EXPLORATION_MODE",
+            "FLAG_REQUEST_FILTER_KEY_EVENTS",
+            "FLAG_REPORT_VIEW_IDS",
+            "FLAG_RETRIEVE_INTERACTIVE_WINDOWS",
+            "performGesture",
+            "dispatchGesture",
+            "click\\(|scrollForward|scrollBackward|setText"
+          ],
+          "description": "Accessibility service abuse enables overlay, keylogging, automation"
+        },
+        {
+          "name": "MediaProjection Screen Capture",
+          "category": "screen_capture",
+          "severity": "high",
+          "regex": [
+            "MediaProjection",
+            "createScreenCaptureIntent",
+            "MediaProjectionManager",
+            "ImageReader",
+            "acquireLatestImage",
+            "Surface",
+            "VirtualDisplay"
+          ],
+          "description": "Screen capture can record sensitive screen content"
+        },
+        {
+          "name": "Device Admin Abuse",
+          "category": "device_admin_abuse",
+          "severity": "critical",
+          "regex": [
+            "DeviceAdminReceiver",
+            "DevicePolicyManager",
+            "lockNow",
+            "wipeData",
+            "resetPassword",
+            "setPasswordQuality",
+            "setPasswordMinimumLength",
+            "setMaximumFailedPasswordsForWipe"
+          ],
+          "description": "Device admin can lock, wipe, or enforce policies"
+        },
+        {
+          "name": "VPN Service Abuse",
+          "category": "vpn_abuse",
+          "severity": "high",
+          "regex": [
+            "VpnService",
+            "establish",
+            "addRoute",
+            "addAddress",
+            "addDnsServer",
+            "protect",
+            "BIND_VPN_SERVICE"
+          ],
+          "description": "VPN service can intercept all network traffic"
+        },
+        {
+          "name": "Overlay Attacks",
+          "category": "overlay_attack",
+          "severity": "high",
+          "regex": [
+            "SYSTEM_ALERT_WINDOW",
+            "TYPE_SYSTEM_ALERT",
+            "TYPE_APPLICATION_OVERLAY",
+            "WindowManager\\.addView",
+            "LayoutParams\\.FLAG_NOT_FOCUSABLE",
+            "LayoutParams\\.FLAG_NOT_TOUCH_MODAL"
+          ],
+          "description": "Overlay attacks used for phishing and credential theft"
+        },
+        {
+          "name": "SMS Interception",
+          "category": "sms_stealer",
+          "severity": "high",
+          "regex": [
+            "SmsManager",
+            "sendTextMessage",
+            "sendMultipartTextMessage",
+            "SMS_RECEIVED",
+            "abortBroadcast",
+            "PDU",
+            "getMessageBody",
+            "getOriginatingAddress"
+          ],
+          "description": "SMS interception can steal 2FA codes and contacts"
+        },
+        {
+          "name": "Package Installation",
+          "category": "dropper",
+          "severity": "high",
+          "regex": [
+            "PackageManager",
+            "INSTALL_PACKAGES",
+            "REQUEST_INSTALL_PACKAGES",
+            "installPackage",
+            "deletePackage",
+            "pm install",
+            "Intent\\.ACTION_INSTALL_PACKAGE"
+          ],
+          "description": "Package installation can drop additional malware"
+        },
+        {
+          "name": "Persistence Mechanisms",
+          "category": "persistence",
+          "severity": "high",
+          "regex": [
+            "RECEIVE_BOOT_COMPLETED",
+            "BOOT_COMPLETED",
+            "QUICKBOOT_POWERON",
+            "FOREGROUND_SERVICE",
+            "startForeground",
+            "JobScheduler",
+            "WorkManager",
+            "AlarmManager",
+            "setExact",
+            "setRepeating",
+            "setInexactRepeating"
+          ],
+          "description": "Persistence mechanisms survive reboots"
+        },
+        {
+          "name": "Anti-Analysis Checks",
+          "category": "anti_analysis",
+          "severity": "medium",
+          "regex": [
+            "Build\\.TYPE",
+            "Build\\.FINGERPRINT",
+            "Build\\.MODEL",
+            "Build\\.MANUFACTURER",
+            "Build\\.BRAND",
+            "Build\\.DEVICE",
+            "Build\\.PRODUCT",
+            "goldfish",
+            "generic",
+            "emulator",
+            "isDebuggerConnected",
+            "Debug\\.isDebuggerConnected",
+            "Trace\\.isTracing",
+            "TracerPid",
+            "ptrace",
+            "Xposed",
+            "Frida",
+            "Substrate",
+            "Cydia",
+            "SU",
+            "Superuser",
+            "Magisk",
+            "checkSignature",
+            "getPackageInfo",
+            "SIGNATURE",
+            "GET_SIGNATURES"
+          ],
+          "description": "Anti-analysis detects emulators, debuggers, root, and analysis tools"
+        },
+        {
+          "name": "Cryptographic Operations",
+          "category": "crypto",
+          "severity": "medium",
+          "regex": [
+            "Cipher",
+            "AES",
+            "RSA",
+            "DES",
+            "SecretKeySpec",
+            "IvParameterSpec",
+            "KeyGenerator",
+            "MessageDigest",
+            "encrypt",
+            "decrypt",
+            "doFinal",
+            "update"
+          ],
+          "description": "Crypto can be used for payload encryption or ransomware"
+        },
+        {
+          "name": "Network Communication",
+          "category": "network",
+          "severity": "medium",
+          "regex": [
+            "HttpURLConnection",
+            "OkHttpClient",
+            "WebSocket",
+            "Socket",
+            "ServerSocket",
+            "DatagramSocket",
+            "HttpsURLConnection",
+            "HttpClient",
+            "DefaultHttpClient",
+            "AndroidHttpClient"
+          ],
+          "description": "Network communication for C2 or data exfiltration"
+        },
+        {
+          "name": "Firebase Integration",
+          "category": "network",
+          "severity": "low",
+          "regex": [
+            "FirebaseDatabase",
+            "DatabaseReference",
+            "FirebaseAuth",
+            "FirebaseMessaging",
+            "FirebaseAnalytics",
+            "google-services.json",
+            "firebaseio\\.com"
+          ],
+          "description": "Firebase can be used for C2 or data exfiltration"
+        },
+        {
+          "name": "Telegram Bot API",
+          "category": "network",
+          "severity": "high",
+          "regex": [
+            "api\\.telegram\\.org",
+            "sendMessage",
+            "getUpdates",
+            "bot[0-9]+:[A-Za-z0-9_-]+",
+            "Telegram",
+            "chat_id"
+          ],
+          "description": "Telegram bots commonly used for C2"
+        },
+        {
+          "name": "Certificate Pinning",
+          "category": "network",
+          "severity": "medium",
+          "regex": [
+            "CertificatePinner",
+            "OkHttpClient\\.Builder",
+            "certificatePinner",
+            "pin",
+            "sha256/"
+          ],
+          "description": "Certificate pinning can prevent MITM analysis"
+        },
+        {
+          "name": "Obfuscation Indicators",
+          "category": "obfuscation",
+          "severity": "medium",
+          "regex": [
+            "ProGuard",
+            "proguard",
+            "DexGuard",
+            "dexguard",
+            "StringEncryption",
+            "ControlFlow",
+            "ArithmeticObfuscation",
+            "ControlFlowObfuscation",
+            "a\\.a\\.a",
+            "a\\.b\\.c",
+            "org\\.proguard",
+            "com\\.strobel"
+          ],
+          "description": "Obfuscation hinders static analysis"
+        },
+        {
+          "name": "Hidden Payloads",
+          "category": "hidden_payload",
+          "severity": "high",
+          "regex": [
+            "assets/",
+            "res/raw/",
+            "getAssets\\(\\)",
+            "openRawResource",
+            "DexFile",
+            "loadDex",
+            "defineClass",
+            "Base64\\.decode",
+            "decodeBase64",
+            "XOR",
+            "decrypt"
+          ],
+          "description": "Hidden payloads in assets/resources"
+        },
+        {
+          "name": "Keylogging",
+          "category": "keylogger",
+          "severity": "high",
+          "regex": [
+            "onKeyDown",
+            "onKeyUp",
+            "KeyEvent",
+            "InputMethodService",
+            "getText",
+            "getContentDescription",
+            "TYPE_VIEW_TEXT_CHANGED",
+            "TYPE_WINDOW_CONTENT_CHANGED"
+          ],
+          "description": "Keylogging captures user input"
+        },
+        {
+          "name": "Contact/SMS/Call Log Access",
+          "category": "data_exfiltration",
+          "severity": "high",
+          "regex": [
+            "READ_CONTACTS",
+            "READ_SMS",
+            "READ_CALL_LOG",
+            "ContentResolver\\.query",
+            "ContactsContract",
+            "Telephony\\.Sms",
+            "CallLog\\.Calls"
+          ],
+          "description": "Access to sensitive personal data"
+        },
+        {
+          "name": "Location Tracking",
+          "category": "spyware",
+          "severity": "high",
+          "regex": [
+            "ACCESS_FINE_LOCATION",
+            "ACCESS_COARSE_LOCATION",
+            "LocationManager",
+            "FusedLocationProviderClient",
+            "requestLocationUpdates",
+            "getLastKnownLocation",
+            "LocationListener"
+          ],
+          "description": "Location tracking for surveillance"
+        },
+        {
+          "name": "Camera/Microphone Access",
+          "category": "spyware",
+          "severity": "high",
+          "regex": [
+            "CAMERA",
+            "RECORD_AUDIO",
+            "Camera\\.open",
+            "MediaRecorder",
+            "AudioRecord",
+            "takePicture",
+            "startRecording"
+          ],
+          "description": "Camera/microphone access for surveillance"
+        },
+        {
+          "name": "AccountManager Abuse",
+          "category": "credential_theft",
+          "severity": "high",
+          "regex": [
+            "AccountManager",
+            "getAccounts",
+            "getAuthToken",
+            "getAuthTokenByFeatures",
+            "invalidateAuthToken",
+            "peekAuthToken"
+          ],
+          "description": "AccountManager can steal authentication tokens"
+        },
+        {
+          "name": "SharedPreferences Credential Storage",
+          "category": "credential_theft",
+          "severity": "medium",
+          "regex": [
+            "SharedPreferences",
+            "getString",
+            "putString",
+            "PASSWORD",
+            "PASSWD",
+            "USERNAME",
+            "LOGIN",
+            "CREDENTIAL",
+            "TOKEN",
+            "SECRET"
+          ],
+          "description": "Insecure credential storage in SharedPreferences"
+        }
+      ]
+    },
+    "malware_families": {
+      "name": "Known Malware Family Signatures",
+      "description": "Matches known malware family patterns from signatures.json",
+      "source_file": "signatures.json",
+      "match_mode": "any_indicator",
+      "min_confidence": 50
+    },
+    "permission_abuse": {
+      "name": "Permission Abuse Patterns",
+      "description": "Detects dangerous permission combinations",
+      "combinations": [
+        {
+          "name": "Full Surveillance Suite",
+          "permissions": [
+            "CAMERA",
+            "RECORD_AUDIO",
+            "ACCESS_FINE_LOCATION",
+            "READ_CONTACTS",
+            "READ_SMS",
+            "READ_CALL_LOG"
+          ],
+          "category": "spyware",
+          "severity": "critical",
+          "description": "Complete surveillance capability"
+        },
+        {
+          "name": "Overlay + Accessibility",
+          "permissions": [
+            "SYSTEM_ALERT_WINDOW",
+            "BIND_ACCESSIBILITY_SERVICE"
+          ],
+          "category": "overlay_attack",
+          "severity": "high",
+          "description": "Enables overlay attacks and accessibility abuse"
+        },
+        {
+          "name": "Device Admin + Accessibility",
+          "permissions": [
+            "BIND_DEVICE_ADMIN",
+            "BIND_ACCESSIBILITY_SERVICE"
+          ],
+          "category": "device_admin_abuse",
+          "severity": "critical",
+          "description": "Full device control capability"
+        },
+        {
+          "name": "SMS + Contacts + Internet",
+          "permissions": [
+            "READ_SMS",
+            "READ_CONTACTS",
+            "INTERNET"
+          ],
+          "category": "data_exfiltration",
+          "severity": "high",
+          "description": "Can exfiltrate SMS and contacts"
+        },
+        {
+          "name": "Package Install + Internet",
+          "permissions": [
+            "REQUEST_INSTALL_PACKAGES",
+            "INTERNET"
+          ],
+          "category": "dropper",
+          "severity": "high",
+          "description": "Can download and install additional payloads"
+        },
+        {
+          "name": "VPN + Internet",
+          "permissions": [
+            "BIND_VPN_SERVICE",
+            "INTERNET"
+          ],
+          "category": "vpn_abuse",
+          "severity": "high",
+          "description": "Can intercept all network traffic"
+        }
+      ]
+    },
+    "network_iocs": {
+      "name": "Network IOC Extraction Rules",
+      "description": "Patterns for extracting network indicators of compromise",
+      "patterns": {
+        "url": {
+          "regex": "https?://[a-zA-Z0-9.-]+(?:/[a-zA-Z0-9._~:/?#\\[\\]@!$&'()*+,;=-]*)?",
+          "description": "HTTP/HTTPS URLs"
+        },
+        "ipv4": {
+          "regex": "\\b(?:(?:25[0-5]|2[0-4][0-9]|[01]?[0-9][0-9]?)\\.){3}(?:25[0-5]|2[0-4][0-9]|[01]?[0-9][0-9]?)\\b",
+          "description": "IPv4 addresses"
+        },
+        "ipv6": {
+          "regex": "\\b(?:[0-9a-fA-F]{1,4}:){7}[0-9a-fA-F]{1,4}\\b",
+          "description": "IPv6 addresses"
+        },
+        "domain": {
+          "regex": "\\b(?:[a-zA-Z0-9](?:[a-zA-Z0-9-]{0,61}[a-zA-Z0-9])?\\.)+[a-zA-Z]{2,}\\b",
+          "description": "Domain names"
+        },
+        "firebase": {
+          "regex": "[a-zA-Z0-9-]+\\.firebaseio\\.com|[a-zA-Z0-9-]+\\.firebasedatabase\\.app",
+          "description": "Firebase URLs"
+        },
+        "telegram_bot": {
+          "regex": "bot[0-9]+:[A-Za-z0-9_-]{35}|api\\.telegram\\.org/bot[0-9]+:[A-Za-z0-9_-]+",
+          "description": "Telegram bot tokens"
+        },
+        "api_key": {
+          "regex": "[A-Za-z0-9_-]{20,}|AIza[0-9A-Za-z_-]{35}|sk-[A-Za-z0-9]{32,}",
+          "description": "API keys"
+        },
+        "email": {
+          "regex": "\\b[A-Za-z0-9._%+-]+@[A-Za-z0-9.-]+\\.[A-Z|a-z]{2,}\\b",
+          "description": "Email addresses"
+        },
+        "bitcoin": {
+          "regex": "\\b[13][a-km-zA-HJ-NP-Z1-9]{25,34}\\b|\\bbc1[a-z0-9]{39,59}\\b",
+          "description": "Bitcoin addresses"
+        },
+        "ethereum": {
+          "regex": "\\b0x[a-fA-F0-9]{40}\\b",
+          "description": "Ethereum addresses"
+        }
+      },
+      "encoding_detection": {
+        "base64": {
+          "regex": "(?:[A-Za-z0-9+/]{4})*(?:[A-Za-z0-9+/]{2}==|[A-Za-z0-9+/]{3}=)?",
+          "min_length": 20,
+          "description": "Base64 encoded strings"
+        },
+        "hex": {
+          "regex": "(?:[0-9a-fA-F]{2})+",
+          "min_length": 16,
+          "description": "Hex encoded strings"
+        },
+        "xor_single_byte": {
+          "description": "Single-byte XOR encoded strings",
+          "detection": "entropy_and_printable_ratio"
+        }
+      }
+    },
+    "string_obfuscation": {
+      "name": "String Obfuscation Detection",
+      "description": "Detects common string obfuscation techniques",
+      "patterns": [
+        {
+          "name": "Base64 Encoded Strings",
+          "detection": "high_entropy_base64",
+          "severity": "medium",
+          "description": "Strings encoded in Base64"
+        },
+        {
+          "name": "Hex Encoded Strings",
+          "detection": "high_entropy_hex",
+          "severity": "medium",
+          "description": "Strings encoded in Hex"
+        },
+        {
+          "name": "XOR Encoded Strings",
+          "detection": "xor_pattern",
+          "severity": "high",
+          "description": "Strings encoded with single-byte XOR"
+        },
+        {
+          "name": "String Concatenation",
+          "detection": "string_concat",
+          "severity": "low",
+          "description": "Strings split and concatenated at runtime"
+        },
+        {
+          "name": "Reflection-based String Access",
+          "detection": "reflection_string",
+          "severity": "medium",
+          "description": "Strings accessed via reflection"
+        }
+      ]
+    },
+    "jni_patterns": {
+      "name": "JNI Suspicious Patterns",
+      "description": "Patterns indicating suspicious JNI usage",
+      "patterns": [
+        {
+          "name": "JNI_OnLoad with RegisterNatives",
+          "indicator": "JNI_OnLoad.*RegisterNatives",
+          "severity": "high",
+          "description": "Dynamic native method registration"
+        },
+        {
+          "name": "Hidden Native Methods",
+          "indicator": "native.*(encrypt|decrypt|hide|obfus|xor|aes|rsa)",
+          "severity": "high",
+          "description": "Native methods with crypto/obfuscation names"
+        },
+        {
+          "name": "System Calls from Native",
+          "indicator": "syscall|__NR_|svc\\s+0|execve|fork|ptrace",
+          "severity": "critical",
+          "description": "Direct system calls from native code"
+        },
+        {
+          "name": "Anti-Debug in Native",
+          "indicator": "ptrace|isDebugger|TracerPid|/proc/self/status",
+          "severity": "high",
+          "description": "Anti-debugging in native code"
+        }
+      ]
+    }
+  }
+}

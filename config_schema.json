@@ -1,0 +1,245 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "title": "APKStudioAI Configuration Schema",
+  "type": "object",
+  "additionalProperties": false,
+  "properties": {
+    "tools": {
+      "type": "object",
+      "additionalProperties": false,
+      "properties": {
+        "jadx_path": { "type": "string" },
+        "apktool_path": { "type": "string" },
+        "java_path": { "type": "string" },
+        "yara_path": { "type": "string" },
+        "auto_detect_tools": { "type": "boolean" }
+      },
+      "required": ["jadx_path", "apktool_path", "java_path", "auto_detect_tools"]
+    },
+    "ollama": {
+      "type": "object",
+      "additionalProperties": false,
+      "properties": {
+        "api_url": { "type": "string", "format": "uri" },
+        "model": { "type": "string" },
+        "timeout": { "type": "integer", "minimum": 1, "maximum": 3600 },
+        "enable_streaming": { "type": "boolean" },
+        "max_chunk_chars": { "type": "integer", "minimum": 1000, "maximum": 100000 },
+        "fallback_enabled": { "type": "boolean" }
+      },
+      "required": ["api_url", "model", "timeout", "enable_streaming", "max_chunk_chars", "fallback_enabled"]
+    },
+    "analysis": {
+      "type": "object",
+      "additionalProperties": false,
+      "properties": {
+        "max_strings_length": { "type": "integer", "minimum": 1000, "maximum": 10000000 },
+        "max_dex_size_mb": { "type": "integer", "minimum": 1, "maximum": 500 },
+        "max_file_size_mb": { "type": "integer", "minimum": 1, "maximum": 1000 },
+        "max_total_extract_mb": { "type": "integer", "minimum": 10, "maximum": 5000 },
+        "enable_ai": { "type": "boolean" },
+        "min_string_length": { "type": "integer", "minimum": 1, "maximum": 100 },
+        "entropy_threshold": { "type": "number", "minimum": 0, "maximum": 8 },
+        "base64_min_length": { "type": "integer", "minimum": 4, "maximum": 200 },
+        "hex_min_length": { "type": "integer", "minimum": 4, "maximum": 200 },
+        "max_methods_analyze": { "type": "integer", "minimum": 100, "maximum": 100000 },
+        "max_bytecode_strings": { "type": "integer", "minimum": 100, "maximum": 100000 },
+        "max_instructions_per_method": { "type": "integer", "minimum": 100, "maximum": 100000 },
+        "max_classes_analyze": { "type": "integer", "minimum": 50, "maximum": 10000 }
+      },
+      "required": ["max_strings_length", "max_dex_size_mb", "max_file_size_mb", "max_total_extract_mb", "enable_ai", "min_string_length", "entropy_threshold", "base64_min_length", "hex_min_length"]
+    },
+    "timeouts": {
+      "type": "object",
+      "additionalProperties": false,
+      "properties": {
+        "apktool": { "type": "integer", "minimum": 10, "maximum": 3600 },
+        "jadx": { "type": "integer", "minimum": 10, "maximum": 7200 },
+        "elf_analysis": { "type": "integer", "minimum": 5, "maximum": 600 },
+        "string_extraction": { "type": "integer", "minimum": 5, "maximum": 600 },
+        "command_default": { "type": "integer", "minimum": 5, "maximum": 3600 }
+      },
+      "required": ["apktool", "jadx", "elf_analysis", "string_extraction", "command_default"]
+    },
+    "limits": {
+      "type": "object",
+      "additionalProperties": false,
+      "properties": {
+        "max_java_file_size_kb": { "type": "integer", "minimum": 10, "maximum": 10000 },
+        "max_classes_per_dex": { "type": "integer", "minimum": 50, "maximum": 5000 },
+        "max_methods_total": { "type": "integer", "minimum": 100, "maximum": 100000 },
+        "max_strings_total": { "type": "integer", "minimum": 100, "maximum": 50000 },
+        "max_decoded_strings": { "type": "integer", "minimum": 10, "maximum": 5000 },
+        "max_suspicious_patterns": { "type": "integer", "minimum": 10, "maximum": 5000 },
+        "max_signature_matches": { "type": "integer", "minimum": 5, "maximum": 500 }
+      },
+      "required": ["max_java_file_size_kb", "max_classes_per_dex", "max_methods_total", "max_strings_total", "max_decoded_strings", "max_suspicious_patterns", "max_signature_matches"]
+    },
+    "risk_engine": {
+      "type": "object",
+      "additionalProperties": false,
+      "properties": {
+        "weights": {
+          "type": "object",
+          "additionalProperties": { "type": "number" }
+        },
+        "thresholds": {
+          "type": "object",
+          "additionalProperties": false,
+          "properties": {
+            "critical": { "type": "integer", "minimum": 0, "maximum": 100 },
+            "high": { "type": "integer", "minimum": 0, "maximum": 100 },
+            "medium": { "type": "integer", "minimum": 0, "maximum": 100 },
+            "low": { "type": "integer", "minimum": 0, "maximum": 100 },
+            "minimal": { "type": "integer", "minimum": 0, "maximum": 100 }
+          },
+          "required": ["critical", "high", "medium", "low", "minimal"]
+        },
+        "permission_weights": {
+          "type": "object",
+          "additionalProperties": false,
+          "properties": {
+            "critical": { "type": "integer", "minimum": 0, "maximum": 50 },
+            "high": { "type": "integer", "minimum": 0, "maximum": 50 },
+            "medium": { "type": "integer", "minimum": 0, "maximum": 50 },
+            "low": { "type": "integer", "minimum": 0, "maximum": 50 },
+            "info": { "type": "integer", "minimum": 0, "maximum": 50 }
+          },
+          "required": ["critical", "high", "medium", "low", "info"]
+        }
+      },
+      "required": ["weights", "thresholds", "permission_weights"]
+    },
+    "scanner": {
+      "type": "object",
+      "additionalProperties": false,
+      "properties": {
+        "stage_weights": {
+          "type": "object",
+          "additionalProperties": { "type": "integer", "minimum": 0, "maximum": 100 }
+        },
+        "parallel_stages": {
+          "type": "object",
+          "additionalProperties": false,
+          "properties": {
+            "enabled": { "type": "boolean" },
+            "max_workers": { "type": "integer", "minimum": 1, "maximum": 32 },
+            "parallel_groups": {
+              "type": "array",
+              "items": {
+                "type": "array",
+                "items": { "type": "string" }
+              }
+            }
+          },
+          "required": ["enabled", "max_workers", "parallel_groups"]
+        },
+        "cache": {
+          "type": "object",
+          "additionalProperties": false,
+          "properties": {
+            "enabled": { "type": "boolean" },
+            "cache_dir": { "type": "string" },
+            "max_age_days": { "type": "integer", "minimum": 1, "maximum": 365 },
+            "max_size_mb": { "type": "integer", "minimum": 100, "maximum": 50000 }
+          },
+          "required": ["enabled", "cache_dir", "max_age_days", "max_size_mb"]
+        }
+      },
+      "required": ["stage_weights", "parallel_stages", "cache"]
+    },
+    "behavior": {
+      "type": "object",
+      "additionalProperties": false,
+      "properties": {
+        "min_confidence": { "type": "integer", "minimum": 0, "maximum": 100 },
+        "min_matches_default": { "type": "integer", "minimum": 1, "maximum": 20 },
+        "rule_categories": {
+          "type": "array",
+          "items": { "type": "string" }
+        }
+      },
+      "required": ["min_confidence", "min_matches_default", "rule_categories"]
+    },
+    "network": {
+      "type": "object",
+      "additionalProperties": false,
+      "properties": {
+        "dga_entropy_threshold": { "type": "number", "minimum": 0, "maximum": 8 },
+        "dga_min_length": { "type": "integer", "minimum": 4, "maximum": 50 },
+        "dynamic_dns_providers": {
+          "type": "array",
+          "items": { "type": "string" }
+        },
+        "suspicious_tlds": {
+          "type": "array",
+          "items": { "type": "string" }
+        },
+        "cert_pinning_keywords": {
+          "type": "array",
+          "items": { "type": "string" }
+        }
+      },
+      "required": ["dga_entropy_threshold", "dga_min_length", "dynamic_dns_providers", "suspicious_tlds", "cert_pinning_keywords"]
+    },
+    "string_analysis": {
+      "type": "object",
+      "additionalProperties": false,
+      "properties": {
+        "xor_keys_to_try": {
+          "type": "array",
+          "items": { "type": "integer", "minimum": 0, "maximum": 255 }
+        },
+        "encoding_detection": {
+          "type": "object",
+          "additionalProperties": false,
+          "properties": {
+            "base64": { "type": "boolean" },
+            "hex": { "type": "boolean" },
+            "xor_single_byte": { "type": "boolean" },
+            "string_concatenation": { "type": "boolean" },
+            "reflection_based": { "type": "boolean" }
+          },
+          "required": ["base64", "hex", "xor_single_byte", "string_concatenation", "reflection_based"]
+        }
+      },
+      "required": ["xor_keys_to_try", "encoding_detection"]
+    },
+    "reporting": {
+      "type": "object",
+      "additionalProperties": false,
+      "properties": {
+        "html_template": { "type": "string" },
+        "include_raw_xml": { "type": "boolean" },
+        "include_all_strings": { "type": "boolean" },
+        "max_evidence_per_category": { "type": "integer", "minimum": 1, "maximum": 200 },
+        "collapsible_sections": { "type": "boolean" }
+      },
+      "required": ["html_template", "include_raw_xml", "include_all_strings", "max_evidence_per_category", "collapsible_sections"]
+    },
+    "gui": {
+      "type": "object",
+      "additionalProperties": false,
+      "properties": {
+        "theme": { "type": "string", "enum": ["light", "dark", "system"] },
+        "window_size": { "type": "string" },
+        "font_size": { "type": "integer", "minimum": 8, "maximum": 24 },
+        "auto_scroll_logs": { "type": "boolean" },
+        "show_tooltips": { "type": "boolean" }
+      },
+      "required": ["theme", "window_size", "font_size", "auto_scroll_logs", "show_tooltips"]
+    },
+    "logging": {
+      "type": "object",
+      "additionalProperties": false,
+      "properties": {
+        "level": { "type": "string", "enum": ["DEBUG", "INFO", "WARNING", "ERROR", "CRITICAL"] },
+        "json_output": { "type": "boolean" },
+        "include_timestamp": { "type": "boolean" },
+        "correlation_ids": { "type": "boolean" }
+      },
+      "required": ["level", "json_output", "include_timestamp", "correlation_ids"]
+    }
+  },
+  "required": ["tools", "ollama", "analysis", "timeouts", "limits", "risk_engine", "scanner", "behavior", "network", "string_analysis", "reporting", "gui", "logging"]
+}

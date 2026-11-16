@@ -8,7 +8,7 @@ echo  Advanced Android Malware Analysis Platform
 echo ============================================================
 echo.
 
-set PROJECT_DIR=%~dp0
+set "PROJECT_DIR=%~dp0"
 cd /d "%PROJECT_DIR%"
 
 echo [DIAG] Starting comprehensive diagnostic...
@@ -21,13 +21,13 @@ echo OS:
 ver
 echo.
 echo Architecture:
-wmic os get OSArchitecture /value 2>nul | find "="
+wmic os get OSArchitecture 2>nul
 echo.
 echo Memory:
-wmic computersystem get TotalPhysicalMemory /value 2>nul | find "="
+wmic computersystem get TotalPhysicalMemory 2>nul
 echo.
 echo CPU:
-wmic cpu get Name /value 2>nul | find "="
+wmic cpu get Name 2>nul
 echo.
 
 REM ============================================================
@@ -40,19 +40,18 @@ echo Pip version:
 pip --version 2>&1
 echo.
 echo Virtual environment:
-if exist "%PROJECT_DIR%venv" (
-    echo [OK] Virtual environment exists at %PROJECT_DIR%venv
-    call "%PROJECT_DIR%venv\Scripts\activate.bat" >nul 2>&1
-    if %errorLevel% == 0 (
-        echo [OK] Virtual environment activates successfully
-        echo Python (venv):
-        python --version 2>&1
-    ) else (
-        echo [ERROR] Virtual environment fails to activate
-    )
-) else (
+if not exist "%PROJECT_DIR%venv" (
     echo [ERROR] Virtual environment NOT FOUND at %PROJECT_DIR%venv
     echo         Run install.bat to create it
+) else (
+    echo [OK] Virtual environment exists at %PROJECT_DIR%venv
+    if exist "%PROJECT_DIR%venv\Scripts\activate.bat" (
+        echo [OK] Activation script found
+        echo Python (venv):
+        "%PROJECT_DIR%venv\Scripts\python.exe" --version 2>&1
+    ) else (
+        echo [WARN] Activation script not found
+    )
 )
 echo.
 
@@ -96,10 +95,10 @@ REM ============================================================
 echo [5/10] EXTERNAL TOOLS
 echo ============================================================
 echo Checking JADX...
-set JADX_BAT=%PROJECT_DIR%tools\jadx\bin\jadx.bat
+set "JADX_BAT=%PROJECT_DIR%tools\jadx\bin\jadx.bat"
 if exist "%JADX_BAT%" (
     echo [OK] JADX found at %JADX_BAT%
-    "%JADX_BAT%" --version 2>&1 | head -1
+    "%JADX_BAT%" --version 2>&1
 ) else (
     echo [ERROR] JADX NOT FOUND at %JADX_BAT%
     echo         Expected: %PROJECT_DIR%tools\jadx\bin\jadx.bat
@@ -127,7 +126,7 @@ if %errorLevel% == 0 (
     ollama --version 2>&1
     echo.
     echo Checking Ollama API...
-    powershell -Command "
+    powershell -ExecutionPolicy Bypass -Command "
         try {
             \$r = Invoke-WebRequest -Uri 'http://127.0.0.1:11434/api/tags' -TimeoutSec 5 -ErrorAction Stop
             if (\$r.StatusCode -eq 200) {
@@ -175,18 +174,18 @@ REM ============================================================
 echo [8/10] PROJECT STRUCTURE
 echo ============================================================
 echo Checking directory structure...
-set DIRS=core analysis reports workspace logs cache tools tests
+set "DIRS=core analysis reports workspace logs cache tools tests"
 for %%d in (%DIRS%) do (
     if exist "%PROJECT_DIR%%%d" (
         echo [OK] %PROJECT_DIR%%%d
-    ) else {
+    ) else (
         echo [MISSING] %PROJECT_DIR%%%d
-    }
+    )
 )
 echo.
 
 echo Checking core modules...
-set MODULES=scanner apk_parser archive_analyzer manifest_analyzer dex_analyzer jadx_engine apktool_engine native_analyzer elf_analyzer jni_analyzer string_analyzer permission_analyzer behavior_analyzer network_analyzer malware_detector risk_engine ollama_client utils reporter
+set "MODULES=scanner archive_analyzer manifest_analyzer dex_analyzer jadx_engine apktool_engine native_analyzer elf_analyzer jni_analyzer string_analyzer permission_analyzer behavior_analyzer network_analyzer malware_detector risk_engine ollama_client utils reporter advanced_static_analyzer androguard_engine apkid_engine config_manager cache_manager incremental_analyzer dex_bytecode_analyzer logging_setup streaming_dex_parser analyzers"
 for %%m in (%MODULES%) do (
     if exist "%PROJECT_DIR%core\%%m.py" (
         echo [OK] core/%%m.py
@@ -211,7 +210,7 @@ REM ============================================================
 echo [9/10] NETWORK CONNECTIVITY
 echo ============================================================
 echo Testing local connections...
-powershell -Command "
+powershell -ExecutionPolicy Bypass -Command "
     # Test Ollama
     try { iwr http://127.0.0.1:11434/api/tags -TimeoutSec 3 -OutFile \$null; Write-Host '[OK] localhost:11434 (Ollama)' } catch { Write-Host '[FAIL] localhost:11434 (Ollama)' }
     # Test GitHub (for JADX/Apktool updates)
