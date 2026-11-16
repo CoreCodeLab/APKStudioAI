@@ -6,6 +6,7 @@ import os
 import json
 import subprocess
 import asyncio
+import sys
 from pathlib import Path
 from typing import Dict, List, Any, Optional
 from datetime import datetime
@@ -35,6 +36,22 @@ class REAAnalyzer:
         self.errors = []
         self.warnings = []
 
+        # Windows uses npx.cmd
+        self._npx_cmd = "npx.cmd" if sys.platform == "win32" else "npx"
+
+    def _run_rea_command(self, args: List[str], timeout: int = 30) -> subprocess.CompletedProcess:
+        """Run REA command with proper Windows handling."""
+        cmd = [self._npx_cmd, "rea-agents@latest"] + args
+        # Use shell=True on Windows to find npx.cmd in PATH
+        use_shell = sys.platform == "win32"
+        return subprocess.run(
+            cmd,
+            capture_output=True,
+            text=True,
+            timeout=timeout,
+            shell=use_shell
+        )
+
     def is_available(self) -> bool:
         """Check if REA is available and configured"""
         if not self.enabled:
@@ -42,12 +59,7 @@ class REAAnalyzer:
 
         # Check if REA CLI is available
         try:
-            result = subprocess.run(
-                ["npx", "rea-agents@latest", "--version"],
-                capture_output=True,
-                text=True,
-                timeout=10
-            )
+            result = self._run_rea_command(["--version"], timeout=10)
             return result.returncode == 0
         except Exception:
             return False
@@ -55,13 +67,9 @@ class REAAnalyzer:
     def get_doctor_status(self) -> Dict[str, Any]:
         """Get REA doctor status"""
         try:
-            result = subprocess.run(
-                ["npx", "rea-agents@latest", "doctor", "--format", "json"],
-                capture_output=True,
-                text=True,
-                timeout=30
-            )
-            if result.returncode == 0:
+            result = self._run_rea_command(["doctor", "--format", "json"], timeout=30)
+            # Parse JSON even if returncode != 0 (doctor returns non-zero when healthy=false)
+            if result.stdout:
                 return json.loads(result.stdout)
         except Exception as e:
             self.errors.append(f"REA doctor failed: {e}")
@@ -322,6 +330,12 @@ class REAAnalyzer:
         """Get REA analyzer capabilities"""
         doctor = self.get_doctor_status()
 
+        # Extract available providers from providerInspections
+        providers = []
+        for p in doctor.get("providerInspections", []):
+            if p.get("available"):
+                providers.append(p.get("id"))
+
         return {
             "enabled": self.enabled,
             "available": self.is_available(),
@@ -329,7 +343,7 @@ class REAAnalyzer:
             "ghidra_path": self.ghidra_path or os.environ.get("GHIDRA_INSTALL_DIR", ""),
             "skill_path": self.skill_path,
             "skill_status": doctor.get("identity", {}).get("skill", {}),
-            "providers": doctor.get("availableProviders", []),
+            "providers": providers,
             "tool_families": self.tool_families,
             "doctor_healthy": doctor.get("healthy", False),
         }
