@@ -46,6 +46,7 @@ evidence.db
 tools/jadx/
 tools/apktool.jar
 tools/*.bat
+rea_tools/
 
 # Local config overrides
 config.local.json
