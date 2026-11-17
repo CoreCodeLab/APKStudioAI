@@ -777,6 +777,22 @@ class APKScanner:
         return results
 
 
+def scan_apk(apk_path: str, config: Dict = None, no_ai: bool = False, progress_callback=None) -> Dict[str, Any]:
+    """Convenience function to scan an APK file.
+
+    Args:
+        apk_path: Path to the APK file
+        config: Configuration dictionary (optional)
+        no_ai: Disable AI analysis
+        progress_callback: Optional callback for progress updates
+
+    Returns:
+        Analysis results dictionary
+    """
+    scanner = APKScanner(config=config, progress_callback=progress_callback)
+    return scanner.scan(apk_path, no_ai=no_ai)
+
+
 def main():
     """CLI entry point."""
     import argparse
