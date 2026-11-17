@@ -203,8 +203,8 @@
     },
     "rea": {
         "enabled": true,
-        "ghidra_path": "",
-        "skill_path": "",
+        "ghidra_path": "D:\\rea\\tools\\ghidra_12.1.4_PUBLIC",
+        "skill_path": "C:\\Rea\\.agents\\skills\\reverse-engineer-anything",
         "mcp_command": "npx -y rea-agents@latest mcp",
         "analyze_native_libs": true,
         "analyze_dex": false,
