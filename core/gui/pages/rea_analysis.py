@@ -3,7 +3,6 @@ REA (Reverse Engineering Assistant) Analysis Page
 Displays enhanced reverse engineering results from REA/Ghidra integration
 """
 import customtkinter as ctk
-from tkinter import scrolledtext
 from typing import Dict, Any
 from ..main_window import BasePage, register_page
 
@@ -59,58 +58,48 @@ class REAAnalysisPage(BasePage):
             tab.grid_rowconfigure(0, weight=1)
             tab.grid_columnconfigure(0, weight=1)
 
-        # Native Libraries tab
-        self.native_libs_text = scrolledtext.ScrolledText(
+        # Native Libraries tab - use CTkTextbox for proper theming
+        self.native_libs_text = ctk.CTkTextbox(
             self.tab_native_libs,
             wrap="word",
-            font=("Consolas", 10),
-            bg="#1e1e1e",
-            fg="#d4d4d4",
-            insertbackground="white"
+            font=ctk.CTkFont(family="Consolas", size=11),
+            corner_radius=6
         )
         self.native_libs_text.grid(row=0, column=0, sticky="nsew", padx=5, pady=5)
 
         # Patterns tab
-        self.patterns_text = scrolledtext.ScrolledText(
+        self.patterns_text = ctk.CTkTextbox(
             self.tab_patterns,
             wrap="word",
-            font=("Consolas", 10),
-            bg="#1e1e1e",
-            fg="#d4d4d4",
-            insertbackground="white"
+            font=ctk.CTkFont(family="Consolas", size=11),
+            corner_radius=6
         )
         self.patterns_text.grid(row=0, column=0, sticky="nsew", padx=5, pady=5)
 
         # Ghidra Analysis tab
-        self.ghidra_text = scrolledtext.ScrolledText(
+        self.ghidra_text = ctk.CTkTextbox(
             self.tab_ghidra,
             wrap="word",
-            font=("Consolas", 10),
-            bg="#1e1e1e",
-            fg="#d4d4d4",
-            insertbackground="white"
+            font=ctk.CTkFont(family="Consolas", size=11),
+            corner_radius=6
         )
         self.ghidra_text.grid(row=0, column=0, sticky="nsew", padx=5, pady=5)
 
         # Cross References tab
-        self.xrefs_text = scrolledtext.ScrolledText(
+        self.xrefs_text = ctk.CTkTextbox(
             self.tab_xrefs,
             wrap="word",
-            font=("Consolas", 10),
-            bg="#1e1e1e",
-            fg="#d4d4d4",
-            insertbackground="white"
+            font=ctk.CTkFont(family="Consolas", size=11),
+            corner_radius=6
         )
         self.xrefs_text.grid(row=0, column=0, sticky="nsew", padx=5, pady=5)
 
         # Decompiler tab
-        self.decompiler_text = scrolledtext.ScrolledText(
+        self.decompiler_text = ctk.CTkTextbox(
             self.tab_decompiler,
             wrap="word",
-            font=("Consolas", 10),
-            bg="#1e1e1e",
-            fg="#d4d4d4",
-            insertbackground="white"
+            font=ctk.CTkFont(family="Consolas", size=11),
+            corner_radius=6
         )
         self.decompiler_text.grid(row=0, column=0, sticky="nsew", padx=5, pady=5)
 
