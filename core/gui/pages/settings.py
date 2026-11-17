@@ -338,7 +338,7 @@ class SettingsPage(BasePage):
 
     def _save_settings(self):
         """Save settings to config."""
-        from ..config_manager import get_config
+        from ...config_manager import get_config
         config = get_config()
 
         # Update config
