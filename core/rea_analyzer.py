@@ -40,18 +40,26 @@ class REAAnalyzer:
         # Windows uses npx.cmd
         self._npx_cmd = "npx.cmd" if sys.platform == "win32" else "npx"
 
-    def _run_rea_command(self, args: List[str], timeout: int = 30) -> subprocess.CompletedProcess:
+    def _run_rea_command(self, args: List[str], timeout: int = 60) -> subprocess.CompletedProcess:
         """Run REA command with proper Windows handling."""
         cmd = [self._npx_cmd, "rea-agents@latest"] + args
         # Use shell=True on Windows to find npx.cmd in PATH
         use_shell = sys.platform == "win32"
-        return subprocess.run(
-            cmd,
-            capture_output=True,
-            text=True,
-            timeout=timeout,
-            shell=use_shell
-        )
+        try:
+            return subprocess.run(
+                cmd,
+                capture_output=True,
+                text=True,
+                timeout=timeout,
+                shell=use_shell
+            )
+        except subprocess.TimeoutExpired as e:
+            return subprocess.CompletedProcess(
+                args=cmd,
+                returncode=143,  # SIGTERM
+                stdout=e.stdout.decode() if e.stdout else "",
+                stderr=f"Timeout after {timeout}s"
+            )
 
     def is_available(self) -> bool:
         """Check if REA is available and configured (cached)"""
@@ -62,9 +70,9 @@ class REAAnalyzer:
         if self._availability_cache is not None:
             return self._availability_cache
 
-        # Check if REA CLI is available (increased timeout for slower environments)
+        # Check if REA CLI is available
         try:
-            result = self._run_rea_command(["--version"], timeout=60)
+            result = self._run_rea_command(["--version"], timeout=90)
             self._availability_cache = (result.returncode == 0)
             if not self._availability_cache:
                 print(f"DEBUG: REA version check failed, returncode={result.returncode}, stderr={result.stderr[:200]}")
@@ -77,7 +85,7 @@ class REAAnalyzer:
     def get_doctor_status(self) -> Dict[str, Any]:
         """Get REA doctor status"""
         try:
-            result = self._run_rea_command(["doctor", "--format", "json"], timeout=30)
+            result = self._run_rea_command(["doctor", "--format", "json"], timeout=60)
             # Parse JSON even if returncode != 0 (doctor returns non-zero when healthy=false)
             if result.stdout:
                 return json.loads(result.stdout)
