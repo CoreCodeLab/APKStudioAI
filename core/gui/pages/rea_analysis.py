@@ -5,18 +5,15 @@ Displays enhanced reverse engineering results from REA/Ghidra integration
 import customtkinter as ctk
 from tkinter import scrolledtext
 from typing import Dict, Any
-from ..main_window import register_page
+from ..main_window import BasePage, register_page
 
 
 @register_page("rea_analysis", "REA Analysis", "🔧")
-class REAAnalysisPage(ctk.CTkFrame):
+class REAAnalysisPage(BasePage):
     """Page for displaying REA enhanced reverse engineering analysis results"""
 
     def __init__(self, parent, app, **kwargs):
-        super().__init__(parent, **kwargs)
-        self.app = app
-        self.config = app.config
-        self.analysis_results = None
+        super().__init__(parent, app, **kwargs)
         self._build_ui()
 
     def _build_ui(self):
