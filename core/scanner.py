@@ -27,7 +27,7 @@ from .behavior_analyzer import BehaviorAnalyzer
 from .network_analyzer import NetworkAnalyzer
 from .malware_detector import MalwareDetector
 from .risk_engine import RiskEngine
-from .ollama_client import OllamaClient
+from .freellmapi import FreeLLMAPIClient, LLMBackend
 from .advanced_static_analyzer import AdvancedStaticAnalyzer
 from .androguard_engine import AndroguardEngine, get_androguard_engine
 from .apkid_engine import APKiDEngine, get_apkid_engine
@@ -40,6 +40,22 @@ from .logging_setup import configure_logging, get_module_logger, ScanContext
 from .ai.agent_base import create_agent_manager
 from .ai.evidence_repository import get_evidence_repository, EvidenceRepository
 from .ai.rag_engine import get_rag_engine
+
+# Forensics modules
+from .forensics import (
+    CaseManager, ForensicCase, CaseStatus,
+    EvidenceIntegrityManager, HashAlgorithm,
+    TimelineReconstructor, TimelineEvent,
+    ForensicArtifactExtractor, ExtractedArtifact,
+    ForensicReporter, ReportTemplate,
+    AuditLogger, AuditEvent, AuditLevel,
+    ForensicStandardsManager,
+    EvidenceContainer, ContainerFormat,
+    get_case_manager, get_timeline_reconstructor,
+    get_artifact_extractor, get_forensic_reporter,
+    get_audit_logger, get_standards_manager,
+    get_evidence_container,
+)
 
 
 class APKScanner:
@@ -95,13 +111,23 @@ class APKScanner:
         self.network_analyzer = NetworkAnalyzer()
         self.malware_detector = MalwareDetector()
         self.risk_engine = RiskEngine()
-        self.ollama_client = OllamaClient(ollama_config)
+        self.ollama_client = FreeLLMAPIClient(self.config)
         self.advanced_static_analyzer = AdvancedStaticAnalyzer(self.config)
         self.androguard_engine = get_androguard_engine(self.config)
         self.apkid_engine = get_apkid_engine(self.config)
 
         # Initialize REA analyzer for enhanced reverse engineering
         self.rea_analyzer = REAAnalyzer(self.config)
+
+        # Initialize Forensics modules
+        forensics_config = self.config.get("forensics", {})
+        self.case_manager = get_case_manager(self.config, forensics_config.get("cases_dir", "./forensic_cases"))
+        self.timeline = get_timeline_reconstructor(self.config)
+        self.artifact_extractor = get_artifact_extractor(self.config, forensics_config.get("artifacts_dir", "./extracted_artifacts"))
+        self.forensic_reporter = get_forensic_reporter(self.config, self.case_manager, self.timeline, self.artifact_extractor)
+        self.audit_logger = get_audit_logger(self.config, forensics_config.get("audit_dir", "./audit_logs"))
+        self.standards_manager = get_standards_manager()
+        self.evidence_container = get_evidence_container(ContainerFormat.CUSTOM)
 
         # Initialize cache manager
         self.cache = get_cache(config_path)
@@ -123,7 +149,6 @@ class APKScanner:
         self.incremental = get_incremental_analyzer(config_path)
 
         # Initialize AI components for multi-agent pipeline
-        self.ollama_client = OllamaClient(self.config.get("ollama", {}))
         self.evidence_repo = get_evidence_repository(self.config)
         self.rag_engine = get_rag_engine(self.config)
         self.agent_manager = create_agent_manager(
@@ -259,10 +284,43 @@ class APKScanner:
         else:
             return {"error": f"Unknown stage: {stage}"}
 
+    def _configure_ai_backend(self, backend: str) -> None:
+        """Configure FreeLLMAPIClient based on selected backend."""
+        if backend == "auto":
+            # Default: FreeLLMAPI -> Ollama -> Rule-based
+            self.ollama_client.llm_config.fallback_order = [
+                LLMBackend.FREELLM_API,
+                LLMBackend.OLLAMA,
+                LLMBackend.RULE_BASED
+            ]
+        elif backend == "freellmapi":
+            self.ollama_client.llm_config.fallback_order = [
+                LLMBackend.FREELLM_API,
+                LLMBackend.RULE_BASED
+            ]
+        elif backend == "ollama":
+            self.ollama_client.llm_config.fallback_order = [
+                LLMBackend.OLLAMA,
+                LLMBackend.RULE_BASED
+            ]
+        elif backend == "rule_based":
+            self.ollama_client.llm_config.fallback_order = [
+                LLMBackend.RULE_BASED
+            ]
+        elif backend == "disabled":
+            self.ollama_client.no_ai_mode = True
+            self.ollama_client.llm_config.fallback_order = [
+                LLMBackend.RULE_BASED
+            ]
+
     def scan(self, apk_path: str, no_ai: bool = False) -> Dict[str, Any]:
         """Perform complete APK scan."""
         self.apk_path = Path(apk_path)
         self.cancelled = False
+
+        # Configure AI backend based on config
+        ai_backend = self.config.get("ai_backend", "auto")
+        self._configure_ai_backend(ai_backend)
 
         if no_ai:
             self.ollama_client.no_ai_mode = True
@@ -489,7 +547,18 @@ class APKScanner:
                 self._update_progress("ai", message="Running multi-agent AI analysis...")
                 ai_result = self._run_multi_agent_pipeline(result)
                 result["ai_analysis"] = ai_result
-    
+
+                # Stage 16: Forensics - Case Management & Evidence Collection
+                forensics_enabled = self.config.get("forensics", {}).get("enabled", True)
+                if forensics_enabled:
+                    self._update_progress("forensics_case", message="Creating forensic case...")
+                    forensics_result = self._run_forensics_pipeline(result)
+                    result["forensics"] = forensics_result
+                    if forensics_result.get("errors"):
+                        result["errors"].extend(forensics_result["errors"])
+                    if forensics_result.get("warnings"):
+                        result["warnings"].extend(forensics_result["warnings"])
+
                 self._update_progress("complete", message="Scan complete!")
 
             except Exception as e:
@@ -716,6 +785,390 @@ class APKScanner:
                 "fallback": self.ollama_client._no_ai_analysis(result) if self.ollama_client else {}
             }
 
+    def _run_forensics_pipeline(self, result: Dict[str, Any]) -> Dict[str, Any]:
+        """Run the forensics pipeline: case creation, evidence collection, timeline, artifacts, reporting."""
+        try:
+            scan_id = result.get("scan_id", "unknown")
+            apk_path = result.get("apk_path", "")
+            sha256 = result.get("sha256", "")
+
+            self.logger.info("forensics_pipeline_started", scan_id=scan_id)
+
+            # Create forensic case
+            case_name = f"APK Analysis - {Path(apk_path).name}"
+            case_description = f"Automated forensic analysis of {Path(apk_path).name} (SHA256: {sha256[:16]}...)"
+
+            case = self.case_manager.create_case(
+                name=case_name,
+                description=case_description,
+                created_by="APKStudioAI Scanner",
+                examiner="APKStudioAI 2.1",
+                examiner_organization="APKStudioAI",
+                priority="normal",
+                classification="confidential",
+                tags=["automated", "android", "malware_analysis"],
+            )
+
+            # Log case creation in audit
+            self.audit_logger.log(
+                event_type="case_created",
+                level="info",
+                actor="APKStudioAI Scanner",
+                actor_role="system",
+                action="create",
+                resource_type="case",
+                resource_id=case.case_id,
+                details={"case_name": case_name, "apk_path": apk_path, "sha256": sha256},
+            )
+
+            # Add APK as primary evidence
+            apk_evidence = self.case_manager.add_evidence(
+                case_id=case.case_id,
+                name=Path(apk_path).name,
+                description=f"Original APK file: {Path(apk_path).name}",
+                evidence_type="apk_file",
+                file_path=apk_path,
+                collected_by="APKStudioAI Scanner",
+                collection_location="automated_scan",
+                collection_method="direct_acquisition",
+                tags=["primary", "apk", "original"],
+                metadata={"sha256": sha256, "scan_id": scan_id},
+            )
+
+            # Extract artifacts from APK
+            self._update_progress("forensics_extract", message="Extracting forensic artifacts...")
+            artifacts = self.artifact_extractor.extract_apk(apk_path)
+
+            # Add artifacts as evidence
+            for artifact in artifacts:
+                if artifact.artifact_type in ["dex", "native_library", "manifest", "certificates", "resources", "strings"]:
+                    self.case_manager.add_evidence(
+                        case_id=case.case_id,
+                        name=artifact.name,
+                        description=f"Extracted {artifact.artifact_type}: {artifact.name}",
+                        evidence_type=artifact.artifact_type,
+                        file_path=artifact.extracted_path,
+                        collected_by="APKStudioAI Scanner",
+                        collection_location="extracted_from_apk",
+                        collection_method="automated_extraction",
+                        tags=["extracted", artifact.artifact_type],
+                        metadata={
+                            "artifact_id": artifact.artifact_id,
+                            "source_path": artifact.source_path,
+                            "size_bytes": artifact.size_bytes,
+                            "hashes": artifact.hashes,
+                            "mime_type": artifact.mime_type,
+                            **artifact.metadata,
+                        },
+                    )
+
+            # Build timeline from analysis results
+            self._update_progress("forensics_timeline", message="Reconstructing timeline...")
+            self._build_forensic_timeline(result, case.case_id)
+
+            # Verify evidence integrity
+            self._update_progress("forensics_verify", message="Verifying evidence integrity...")
+            self._verify_evidence_integrity(case.case_id)
+
+            # Run standards compliance check
+            self._update_progress("forensics_standards", message="Checking forensic standards compliance...")
+            compliance_result = self._check_forensic_standards(case.case_id)
+
+            # Generate forensic report
+            self._update_progress("forensics_report", message="Generating forensic report...")
+            report_result = self._generate_forensic_report(case.case_id)
+
+            # Create evidence container
+            self._update_progress("forensics_container", message="Creating evidence container...")
+            container_result = self._create_evidence_container(case.case_id)
+
+            # Finalize case
+            self.case_manager.update_case(case.case_id, {
+                "analysis_results": {
+                    "scan_id": scan_id,
+                    "apk_path": apk_path,
+                    "sha256": sha256,
+                    "risk_score": result.get("risk", {}).get("score", 0),
+                    "risk_level": result.get("risk", {}).get("risk_level", "UNKNOWN"),
+                    "malware_detections": len(result.get("malware", {}).get("detections", [])),
+                    "artifacts_extracted": len(artifacts),
+                    "timeline_events": len(self.timeline.events),
+                    "compliance_score": compliance_result.get("overall", {}).get("average_compliance_score", 0),
+                }
+            })
+
+            self.logger.info("forensics_pipeline_completed", scan_id=scan_id, case_id=case.case_id)
+
+            return {
+                "success": True,
+                "case_id": case.case_id,
+                "case_number": case.case_number,
+                "evidence_count": len(self.case_manager.get_case_evidence(case.case_id)),
+                "artifacts_extracted": len(artifacts),
+                "timeline_events": len(self.timeline.events),
+                "compliance": compliance_result.get("overall", {}),
+                "report_path": report_result.get("report_path", ""),
+                "container_path": container_result.get("container_path", ""),
+                "errors": [],
+                "warnings": [],
+            }
+
+        except Exception as e:
+            import traceback
+            tb = traceback.format_exc()
+            self.logger.error("forensics_pipeline_failed", scan_id=result.get("scan_id"), error=str(e), traceback=tb)
+            return {
+                "success": False,
+                "error": str(e),
+                "traceback": traceback.format_exc(),
+                "errors": [str(e)],
+                "warnings": [],
+            }
+
+    def _build_forensic_timeline(self, result: Dict[str, Any], case_id: str):
+        """Build forensic timeline from analysis results."""
+        from .forensics.timeline_reconstructor import (
+            EventSource, EventCategory, EventSeverity,
+            create_file_event, create_network_event, create_malware_event
+        )
+        from datetime import datetime, timezone
+
+        scan_time = datetime.fromisoformat(result.get("scan_time", datetime.now(timezone.utc).isoformat()))
+
+        # File system events (APK extraction)
+        self.timeline.create_event(
+            timestamp=scan_time,
+            source=EventSource.FILE_SYSTEM.value,
+            category=EventCategory.FILE_CREATED.value,
+            severity=EventSeverity.INFORMATIONAL.value,
+            title=f"APK Extracted: {Path(result.get('apk_path', '')).name}",
+            description=f"APK extracted for analysis",
+            details={"apk_path": result.get("apk_path"), "sha256": result.get("sha256")},
+            tags=["extraction", "apk"],
+            analyzer="archive_analyzer",
+        )
+
+        # Manifest events
+        manifest = result.get("manifest", {})
+        if manifest.get("package"):
+            self.timeline.create_event(
+                timestamp=scan_time,
+                source=EventSource.APK_MANIFEST.value,
+                category=EventCategory.CONFIGURATION_CHANGE.value,
+                severity=EventSeverity.INFORMATIONAL.value,
+                title=f"Package Identified: {manifest.get('package')}",
+                description=f"Application package: {manifest.get('package')}, version: {manifest.get('version_name')}",
+                details={"package": manifest.get("package"), "version": manifest.get("version_name")},
+                tags=["manifest", "package"],
+                analyzer="manifest_analyzer",
+            )
+
+        # Permissions events
+        perm_analysis = result.get("permission_analysis", {})
+        for level in ["critical", "high"]:
+            for perm in perm_analysis.get("by_risk", {}).get(level, []):
+                self.timeline.create_event(
+                    timestamp=scan_time,
+                    source=EventSource.PERMISSION_ANALYSIS.value,
+                    category=EventCategory.PERMISSION_REQUESTED.value,
+                    severity=EventSeverity.HIGH.value if level == "critical" else EventSeverity.MEDIUM.value,
+                    title=f"High-Risk Permission: {perm.get('permission')}",
+                    description=perm.get("description", ""),
+                    details={"permission": perm.get("permission"), "risk_level": level, "capability": perm.get("capability")},
+                    tags=["permission", level, "risk"],
+                    mitre_techniques=perm.get("mitre", []),
+                    confidence=80,
+                    analyzer="permission_analyzer",
+                )
+
+        # Network IOCs
+        network = result.get("network", {})
+        for url in network.get("urls", [])[:20]:
+            self.timeline.create_event(
+                timestamp=scan_time,
+                source=EventSource.NETWORK_ANALYSIS.value,
+                category=EventCategory.NETWORK_HTTP.value,
+                severity=EventSeverity.INFORMATIONAL.value,
+                title=f"URL Found: {url[:80]}",
+                description=f"URL extracted from strings: {url}",
+                details={"url": url, "source": "string_analysis"},
+                tags=["network", "url", "ioc"],
+                analyzer="network_analyzer",
+            )
+
+        for domain in network.get("domains", [])[:20]:
+            self.timeline.create_event(
+                timestamp=scan_time,
+                source=EventSource.NETWORK_ANALYSIS.value,
+                category=EventCategory.NETWORK_DNS.value,
+                severity=EventSeverity.INFORMATIONAL.value,
+                title=f"Domain Found: {domain}",
+                description=f"Domain extracted from strings",
+                details={"domain": domain, "source": "string_analysis"},
+                tags=["network", "domain", "ioc"],
+                analyzer="network_analyzer",
+            )
+
+        # Malware detections
+        malware = result.get("malware", {})
+        for det in malware.get("detections", []):
+            if det.get("confidence_score", 0) >= 50:
+                severity_map = {
+                    "confirmed": EventSeverity.CRITICAL,
+                    "likely": EventSeverity.HIGH,
+                    "possible": EventSeverity.MEDIUM,
+                    "suspected": EventSeverity.LOW,
+                }
+                self.timeline.create_event(
+                    timestamp=scan_time,
+                    source=EventSource.MALWARE_DETECTION.value,
+                    category=EventCategory.MALWARE_INDICATOR.value,
+                    severity=severity_map.get(det.get("classification", ""), EventSeverity.MEDIUM).value,
+                    title=f"Malware Detected: {det.get('category', '').upper()}",
+                    description=f"{det.get('category')}: {det.get('classification')} ({det.get('confidence_score')}%) - {det.get('description', '')}",
+                    details={"malware_family": det.get("category"), "classification": det.get("classification"), "confidence": det.get("confidence_score")},
+                    tags=["malware", det.get("category", ""), det.get("classification", "")],
+                    mitre_techniques=det.get("mitre_techniques", []),
+                    confidence=det.get("confidence_score", 50),
+                    analyzer="malware_detector",
+                )
+
+        # Native libraries
+        native = result.get("native", {})
+        for lib in native.get("libraries", []):
+            self.timeline.create_event(
+                timestamp=scan_time,
+                source=EventSource.NATIVE_ANALYSIS.value,
+                category=EventCategory.FILE_CREATED.value,
+                severity=EventSeverity.INFORMATIONAL.value,
+                title=f"Native Library: {lib.get('name')} ({lib.get('architecture')})",
+                description=f"Native library found with {len(lib.get('native_methods', []))} JNI methods",
+                details={"library": lib.get("name"), "arch": lib.get("architecture"), "jni_methods": len(lib.get("native_methods", []))},
+                tags=["native", "elf", lib.get("architecture", "")],
+                analyzer="native_analyzer",
+            )
+
+        # REA analysis events
+        rea = result.get("rea", {})
+        for pattern in rea.get("patterns", [])[:20]:
+            severity_map = {"critical": EventSeverity.CRITICAL, "high": EventSeverity.HIGH, "medium": EventSeverity.MEDIUM, "low": EventSeverity.LOW}
+            self.timeline.create_event(
+                timestamp=scan_time,
+                source=EventSource.REA_ANALYSIS.value,
+                category=EventCategory.MALWARE_INDICATOR.value,
+                severity=severity_map.get(pattern.get("severity", "low"), EventSeverity.MEDIUM).value,
+                title=f"REA Pattern: {pattern.get('pattern')} ({pattern.get('severity')})",
+                description=pattern.get("description", ""),
+                details={"pattern": pattern.get("pattern"), "type": pattern.get("type"), "matches": pattern.get("matches"), "offsets": pattern.get("offsets", [])[:10]},
+                tags=["rea", pattern.get("type", ""), pattern.get("severity", "")],
+                confidence=80,
+                analyzer="rea_analyzer",
+            )
+
+    def _verify_evidence_integrity(self, case_id: str):
+        """Verify integrity of all evidence in case."""
+        evidence_list = self.case_manager.get_case_evidence(case_id)
+
+        for evidence in evidence_list:
+            report = self.artifact_extractor.integrity_mgr.verify_file_detailed(
+                evidence.file_path, evidence.hashes
+            )
+
+            # Log verification
+            self.audit_logger.log(
+                event_type="integrity_check_passed" if report.all_match and report.size_match else "integrity_check_failed",
+                level="info" if report.all_match and report.size_match else "warning",
+                actor="APKStudioAI Scanner",
+                actor_role="system",
+                action="verify",
+                resource_type="evidence",
+                resource_id=evidence.evidence_id,
+                details={
+                    "file": evidence.file_path,
+                    "hashes_match": report.all_match,
+                    "size_match": report.size_match,
+                    "expected_hashes": evidence.hashes,
+                    "calculated_hashes": report.calculated_hashes,
+                },
+                outcome="success" if report.all_match and report.size_match else "failure",
+            )
+
+    def _check_forensic_standards(self, case_id: str) -> Dict[str, Any]:
+        """Check forensic standards compliance for case."""
+        case = self.case_manager.get_case(case_id)
+        evidence = self.case_manager.get_case_evidence(case_id)
+
+        case_data = {
+            "case": case.to_dict() if case else {},
+            "evidence": [e.to_dict() for e in evidence],
+            "timeline": [e.to_dict() for e in self.timeline.events],
+            "artifacts": [a.to_dict() for a in self.artifact_extractor.artifacts.values()],
+            "audit_log": [],  # Would include audit events
+        }
+
+        return self.standards_manager.check_all_compliance(case_data)
+
+    def _generate_forensic_report(self, case_id: str) -> Dict[str, Any]:
+        """Generate forensic report for case."""
+        from .forensics.forensic_reporter import ReportTemplate, ReportFormat, ReportConfig
+
+        report_config = ReportConfig(
+            template=ReportTemplate.FULL_FORENSIC.value,
+            format=ReportFormat.HTML.value,
+            include_chain_of_custody=True,
+            include_timeline=True,
+            include_artifacts=True,
+            include_iocs=True,
+            include_mitre=True,
+            include_recommendations=True,
+            include_appendices=True,
+            classification="CONFIDENTIAL",
+            examiner_name="APKStudioAI 2.1",
+            examiner_organization="APKStudioAI",
+        )
+
+        # Create reports directory for case
+        reports_dir = Path("reports") / case_id
+        reports_dir.mkdir(parents=True, exist_ok=True)
+
+        report_path = str(reports_dir / f"forensic_report_{case_id}.html")
+
+        success = self.forensic_reporter.generate_report(case_id, report_config, report_path)
+
+        return {
+            "success": success,
+            "report_path": report_path if success else "",
+            "template": report_config.template,
+            "format": report_config.format,
+        }
+
+    def _create_evidence_container(self, case_id: str) -> Dict[str, Any]:
+        """Create evidence container for case."""
+        from .forensics.evidence_container import ContainerFormat, ContainerBuilder
+
+        builder = ContainerBuilder(self.case_manager, self.artifact_extractor)
+
+        containers_dir = Path("evidence_containers") / case_id
+        containers_dir.mkdir(parents=True, exist_ok=True)
+
+        container_path = str(containers_dir / f"evidence_{case_id}.aec")
+
+        success = builder.create_case_container(
+            case_id=case_id,
+            output_path=container_path,
+            format=ContainerFormat.CUSTOM,
+            include_evidence=True,
+            include_artifacts=True,
+            include_reports=True,
+            include_audit=True,
+        )
+
+        return {
+            "success": success,
+            "container_path": container_path if success else "",
+            "format": ContainerFormat.CUSTOM.value,
+        }
+
     def _extract_apk(self) -> Optional[Path]:
         """Extract APK to temporary directory."""
         try:
@@ -928,6 +1381,30 @@ def format_text_output(data: Dict) -> str:
     elif rea.get("error"):
         lines.append("")
         lines.append(f"REA ANALYSIS: {rea['error']}")
+
+    # Forensics Analysis
+    forensics = data.get("forensics", {})
+    if forensics.get("success"):
+        lines.append("")
+        lines.append("FORENSICS ANALYSIS:")
+        lines.append(f"  Case ID: {forensics.get('case_id', 'N/A')}")
+        lines.append(f"  Case Number: {forensics.get('case_number', 'N/A')}")
+        lines.append(f"  Evidence Items: {forensics.get('evidence_count', 0)}")
+        lines.append(f"  Artifacts Extracted: {forensics.get('artifacts_extracted', 0)}")
+        lines.append(f"  Timeline Events: {forensics.get('timeline_events', 0)}")
+
+        compliance = forensics.get("compliance", {})
+        if compliance:
+            lines.append(f"  Standards Compliance: {compliance.get('average_compliance_score', 0):.1f}%")
+            lines.append(f"  Standards Checked: {compliance.get('standards_checked', 0)}")
+
+        if forensics.get("report_path"):
+            lines.append(f"  Report: {forensics['report_path']}")
+        if forensics.get("container_path"):
+            lines.append(f"  Evidence Container: {forensics['container_path']}")
+    elif forensics.get("error"):
+        lines.append("")
+        lines.append(f"FORENSICS ANALYSIS: {forensics['error']}")
 
     return "\n".join(lines)
 

@@ -4,6 +4,7 @@
   "type": "object",
   "additionalProperties": false,
   "properties": {
+    "ai_backend": { "type": "string", "enum": ["auto", "freellmapi", "ollama", "rule_based", "disabled"] },
     "tools": {
       "type": "object",
       "additionalProperties": false,
@@ -29,6 +30,23 @@
       },
       "required": ["api_url", "model", "timeout", "enable_streaming", "max_chunk_chars", "fallback_enabled"]
     },
+    "freellmapi": {
+      "type": "object",
+      "additionalProperties": false,
+      "properties": {
+        "api_url": { "type": "string", "format": "uri" },
+        "api_key": { "type": "string" },
+        "model": { "type": "string" },
+        "timeout": { "type": "integer", "minimum": 1, "maximum": 3600 },
+        "enabled": { "type": "boolean" },
+        "fallback_order": { "type": "string" },
+        "max_chunk_chars": { "type": "integer", "minimum": 1000, "maximum": 100000 },
+        "temperature": { "type": "number", "minimum": 0, "maximum": 2 },
+        "max_tokens": { "type": "integer", "minimum": 64, "maximum": 131072 },
+        "rule_based_fallback": { "type": "boolean" }
+      },
+      "required": ["api_url", "api_key", "model", "timeout", "enabled", "fallback_order", "max_chunk_chars", "temperature", "max_tokens", "rule_based_fallback"]
+    },
     "analysis": {
       "type": "object",
       "additionalProperties": false,
@@ -45,7 +63,9 @@
         "max_methods_analyze": { "type": "integer", "minimum": 100, "maximum": 100000 },
         "max_bytecode_strings": { "type": "integer", "minimum": 100, "maximum": 100000 },
         "max_instructions_per_method": { "type": "integer", "minimum": 100, "maximum": 100000 },
-        "max_classes_analyze": { "type": "integer", "minimum": 50, "maximum": 10000 }
+        "max_classes_analyze": { "type": "integer", "minimum": 50, "maximum": 10000 },
+        "jadx_path": { "type": "string" },
+        "yara_rules_dir": { "type": "string" }
       },
       "required": ["max_strings_length", "max_dex_size_mb", "max_file_size_mb", "max_total_extract_mb", "enable_ai", "min_string_length", "entropy_threshold", "base64_min_length", "hex_min_length"]
     },
@@ -236,7 +256,8 @@
         "level": { "type": "string", "enum": ["DEBUG", "INFO", "WARNING", "ERROR", "CRITICAL"] },
         "json_output": { "type": "boolean" },
         "include_timestamp": { "type": "boolean" },
-        "correlation_ids": { "type": "boolean" }
+        "correlation_ids": { "type": "boolean" },
+        "file": { "type": "string" }
       },
       "required": ["level", "json_output", "include_timestamp", "correlation_ids"]
     },
@@ -258,7 +279,80 @@
         }
       },
       "required": ["enabled", "ghidra_path", "skill_path", "mcp_command", "analyze_native_libs", "analyze_dex", "pattern_search", "max_analysis_time_sec", "ghidra_scripts"]
+    },
+    "forensics": {
+      "type": "object",
+      "additionalProperties": false,
+      "properties": {
+        "enabled": { "type": "boolean" },
+        "cases_dir": { "type": "string" },
+        "artifacts_dir": { "type": "string" },
+        "audit_dir": { "type": "string" },
+        "reports_dir": { "type": "string" },
+        "containers_dir": { "type": "string" },
+        "create_case_per_scan": { "type": "boolean" },
+        "extract_artifacts": { "type": "boolean" },
+        "build_timeline": { "type": "boolean" },
+        "verify_integrity": { "type": "boolean" },
+        "check_standards": { "type": "boolean" },
+        "generate_report": { "type": "boolean" },
+        "create_container": { "type": "boolean" },
+        "standards": {
+          "type": "array",
+          "items": { "type": "string", "enum": ["nist_sp_800_86", "iso_iec_27037", "nist_sp_800_101", "iso_iec_27041", "iso_iec_27042", "iso_iec_27043", "iso_iec_27050", "rfc_3227", "swgde", "nist_csf"] }
+        },
+        "report_template": { "type": "string", "enum": ["executive_summary", "technical_findings", "full_forensic", "incident_response", "malware_analysis", "chain_of_custody", "timeline_analysis", "ioc_report", "mitre_attack", "custom"] },
+        "report_format": { "type": "string", "enum": ["html", "pdf", "json", "markdown", "docx"] },
+        "container_format": { "type": "string", "enum": ["zip", "tar.gz", "aff4", "e01", "custom"] },
+        "classification": { "type": "string", "enum": ["UNCLASSIFIED", "SENSITIVE", "CONFIDENTIAL", "SECRET", "TOP_SECRET"] },
+        "examiner_name": { "type": "string" },
+        "examiner_organization": { "type": "string" }
+      },
+      "required": ["enabled", "cases_dir", "artifacts_dir", "audit_dir", "reports_dir", "containers_dir", "create_case_per_scan", "extract_artifacts", "build_timeline", "verify_integrity", "check_standards", "generate_report", "create_container", "standards", "report_template", "report_format", "container_format", "classification", "examiner_name", "examiner_organization"]
+    },
+    "general": {
+      "type": "object",
+      "additionalProperties": false,
+      "properties": {}
+    },
+    "ai": {
+      "type": "object",
+      "additionalProperties": false,
+      "properties": {
+        "ollama_host": { "type": "string", "format": "uri" },
+        "default_model": { "type": "string" },
+        "chroma_path": { "type": "string" }
+      },
+      "required": ["ollama_host", "default_model", "chroma_path"]
+    },
+    "dynamic": {
+      "type": "object",
+      "additionalProperties": false,
+      "properties": {
+        "frida_enabled": { "type": "boolean" },
+        "frida_port": { "type": "integer", "minimum": 1024, "maximum": 65535 },
+        "emulator_enabled": { "type": "boolean" },
+        "avd_name": { "type": "string" },
+        "emulator_path": { "type": "string" }
+      },
+      "required": ["avd_name", "emulator_path"]
+    },
+    "threat_intel": {
+      "type": "object",
+      "additionalProperties": false,
+      "properties": {
+        "virustotal_key": { "type": "string" }
+      },
+      "required": ["virustotal_key"]
+    },
+    "storage": {
+      "type": "object",
+      "additionalProperties": false,
+      "properties": {
+        "evidence_db": { "type": "string" }
+      },
+      "required": ["evidence_db"]
     }
   },
-  "required": ["tools", "ollama", "analysis", "timeouts", "limits", "risk_engine", "scanner", "behavior", "network", "string_analysis", "reporting", "gui", "logging", "rea"]
+  "required": ["tools", "ollama", "freellmapi", "analysis", "timeouts", "limits", "risk_engine", "scanner", "behavior", "network", "string_analysis", "reporting", "gui", "logging", "rea", "forensics", "general", "ai", "dynamic", "threat_intel", "storage"]
 }

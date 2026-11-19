@@ -8,6 +8,17 @@ import sys
 from typing import Any, Dict
 
 
+class AndroguardWarningFilter(logging.Filter):
+    """Filter to suppress androguard 'dummy data' WARNING spam."""
+    def filter(self, record: logging.LogRecord) -> bool:
+        msg = record.getMessage()
+        if "androguard" in record.name.lower() and "dummy data" in msg:
+            return False
+        if "Appears that dummy data are found between elements" in msg:
+            return False
+        return True
+
+
 def configure_logging(
     level: str = "INFO",
     json_output: bool = False,
@@ -21,6 +32,13 @@ def configure_logging(
         stream=sys.stdout,
         level=getattr(logging, level.upper(), logging.INFO),
     )
+
+    # Add filter to suppress androguard dummy data WARNING spam
+    androguard_filter = AndroguardWarningFilter()
+    for logger_name in ["androguard", "androguard.core.axml", "androguard.core.bytecodes"]:
+        logger = logging.getLogger(logger_name)
+        logger.addFilter(androguard_filter)
+        logger.setLevel(logging.ERROR)  # Only show ERROR and above for androguard
 
     # Shared processors
     shared_processors = [

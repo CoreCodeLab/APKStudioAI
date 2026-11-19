@@ -1,228 +1,285 @@
 {
-    "tools": {
-        "jadx_path": "c:\\APKStudioAI\\tools\\jadx\\bin\\jadx.bat",
-        "apktool_path": "c:\\APKStudioAI\\tools\\apktool.jar",
-        "java_path": "java",
-        "yara_path": "",
-        "auto_detect_tools": true
+  "tools": {
+    "jadx_path": "c:\\APKStudioAI\\tools\\jadx\\bin\\jadx.bat",
+    "apktool_path": "c:\\APKStudioAI\\tools\\apktool.jar",
+    "java_path": "java",
+    "auto_detect_tools": true,
+    "yara_path": ""
+  },
+  "ollama": {
+    "api_url": "http://127.0.0.1:11434",
+    "model": "qwen2.5-coder:3b",
+    "timeout": 180,
+    "enable_streaming": true,
+    "max_chunk_chars": 8000,
+    "fallback_enabled": true
+  },
+  "ai_backend": "auto",
+  "freellmapi": {
+    "api_url": "http://localhost:3001/v1",
+    "api_key": "",
+    "model": "auto",
+    "timeout": 120,
+    "enabled": true,
+    "fallback_order": "freellmapi,ollama,rule_based",
+    "max_chunk_chars": 8000,
+    "temperature": 0.1,
+    "max_tokens": 4096,
+    "rule_based_fallback": true
+  },
+  "analysis": {
+    "max_strings_length": 100000,
+    "max_dex_size_mb": 50,
+    "max_file_size_mb": 100,
+    "max_total_extract_mb": 500,
+    "enable_ai": true,
+    "min_string_length": 5,
+    "entropy_threshold": 3.5,
+    "base64_min_length": 20,
+    "hex_min_length": 16,
+    "max_methods_analyze": 2000,
+    "max_bytecode_strings": 5000,
+    "max_instructions_per_method": 5000,
+    "max_classes_analyze": 500,
+    "jadx_path": "C:/APKStudioAI/tools/jadx/bin/jadx.bat",
+    "yara_rules_dir": "C:/APKStudioAI/yara_rules"
+  },
+  "timeouts": {
+    "apktool": 300,
+    "jadx": 600,
+    "elf_analysis": 60,
+    "string_extraction": 30,
+    "command_default": 300
+  },
+  "limits": {
+    "max_java_file_size_kb": 500,
+    "max_classes_per_dex": 500,
+    "max_methods_total": 1000,
+    "max_strings_total": 5000,
+    "max_decoded_strings": 200,
+    "max_suspicious_patterns": 200,
+    "max_signature_matches": 50
+  },
+  "risk_engine": {
+    "weights": {
+      "permission_base": 30,
+      "malware_confirmed": 40,
+      "malware_likely": 25,
+      "malware_possible": 15,
+      "malware_suspected": 8,
+      "behavior_high": 20,
+      "behavior_medium": 12,
+      "behavior_low": 5,
+      "network_c2": 15,
+      "network_suspicious": 8,
+      "network_telegram": 12,
+      "network_firebase": 5,
+      "native_jni_onload": 5,
+      "native_many_exports": 5,
+      "native_suspicious_strings": 5,
+      "anti_analysis": 10,
+      "obfuscation": 5,
+      "hidden_payload": 8,
+      "clean_manifest": -3,
+      "standard_permissions": -2,
+      "no_native": -2,
+      "no_dynamic_loading": -2
     },
-    "ollama": {
-        "api_url": "http://127.0.0.1:11434",
-        "model": "qwen2.5-coder:3b",
-        "timeout": 180,
-        "enable_streaming": true,
-        "max_chunk_chars": 8000,
-        "fallback_enabled": true
+    "thresholds": {
+      "critical": 80,
+      "high": 60,
+      "medium": 40,
+      "low": 20,
+      "minimal": 0
     },
-    "analysis": {
-        "max_strings_length": 100000,
-        "max_dex_size_mb": 50,
-        "max_file_size_mb": 100,
-        "max_total_extract_mb": 500,
-        "enable_ai": true,
-        "min_string_length": 5,
-        "entropy_threshold": 3.5,
-        "base64_min_length": 20,
-        "hex_min_length": 16,
-        "max_methods_analyze": 2000,
-        "max_bytecode_strings": 5000,
-        "max_instructions_per_method": 5000,
-        "max_classes_analyze": 500
-    },
-    "timeouts": {
-        "apktool": 300,
-        "jadx": 600,
-        "elf_analysis": 60,
-        "string_extraction": 30,
-        "command_default": 300
-    },
-    "limits": {
-        "max_java_file_size_kb": 500,
-        "max_classes_per_dex": 500,
-        "max_methods_total": 1000,
-        "max_strings_total": 5000,
-        "max_decoded_strings": 200,
-        "max_suspicious_patterns": 200,
-        "max_signature_matches": 50
-    },
-    "risk_engine": {
-        "weights": {
-            "permission_base": 30,
-            "malware_confirmed": 40,
-            "malware_likely": 25,
-            "malware_possible": 15,
-            "malware_suspected": 8,
-            "behavior_high": 20,
-            "behavior_medium": 12,
-            "behavior_low": 5,
-            "network_c2": 15,
-            "network_suspicious": 8,
-            "network_telegram": 12,
-            "network_firebase": 5,
-            "native_jni_onload": 5,
-            "native_many_exports": 5,
-            "native_suspicious_strings": 5,
-            "anti_analysis": 10,
-            "obfuscation": 5,
-            "hidden_payload": 8,
-            "clean_manifest": -3,
-            "standard_permissions": -2,
-            "no_native": -2,
-            "no_dynamic_loading": -2
-        },
-        "thresholds": {
-            "critical": 80,
-            "high": 60,
-            "medium": 40,
-            "low": 20,
-            "minimal": 0
-        },
-        "permission_weights": {
-            "critical": 15,
-            "high": 8,
-            "medium": 4,
-            "low": 1,
-            "info": 0
-        }
-    },
-    "scanner": {
-        "stage_weights": {
-            "archive": 5,
-            "extract": 10,
-            "manifest": 20,
-            "dex": 30,
-            "jadx": 40,
-            "smali": 50,
-            "native": 60,
-            "jni": 65,
-            "rea": 67,
-            "strings": 70,
-            "permissions": 75,
-            "behavior": 80,
-            "network": 85,
-            "malware": 90,
-            "risk": 95,
-            "ai": 98,
-            "complete": 100
-        },
-        "parallel_stages": {
-            "enabled": false,
-            "max_workers": 4,
-            "parallel_groups": [
-                [
-                    "dex",
-                    "jadx",
-                    "smali"
-                ],
-                [
-                    "native",
-                    "strings"
-                ],
-                [
-                    "permissions",
-                    "behavior",
-                    "network"
-                ]
-            ]
-        },
-        "cache": {
-            "enabled": true,
-            "cache_dir": ".apkstudio_cache",
-            "max_age_days": 30,
-            "max_size_mb": 2000
-        }
-    },
-    "behavior": {
-        "min_confidence": 30,
-        "min_matches_default": 2,
-        "rule_categories": [
-            "suspicious_api_usage",
-            "malware_families",
-            "permission_abuse",
-            "network_iocs",
-            "string_obfuscation",
-            "jni_patterns"
-        ]
-    },
-    "network": {
-        "dga_entropy_threshold": 4.0,
-        "dga_min_length": 12,
-        "dynamic_dns_providers": [
-            "no-ip.com",
-            "dyndns.org",
-            "duckdns.org",
-            "freedns.afraid.org",
-            "changeip.com",
-            "dnsdynamic.org",
-            "hopto.org",
-            "ddns.net"
-        ],
-        "suspicious_tlds": [
-            "tk",
-            "ml",
-            "ga",
-            "cf",
-            "gq",
-            "xyz",
-            "top",
-            "club",
-            "work",
-            "online"
-        ],
-        "cert_pinning_keywords": [
-            "CertificatePinner",
-            "pinning",
-            "sha256/",
-            "trustManager",
-            "X509TrustManager"
-        ]
-    },
-    "string_analysis": {
-        "xor_keys_to_try": [
-            85,
-            170,
-            255,
-            0,
-            51,
-            204
-        ],
-        "encoding_detection": {
-            "base64": true,
-            "hex": true,
-            "xor_single_byte": true,
-            "string_concatenation": true,
-            "reflection_based": true
-        }
-    },
-    "reporting": {
-        "html_template": "embedded",
-        "include_raw_xml": true,
-        "include_all_strings": false,
-        "max_evidence_per_category": 20,
-        "collapsible_sections": true
-    },
-    "rea": {
-        "enabled": true,
-        "ghidra_path": "D:\\rea\\tools\\ghidra_12.1.4_PUBLIC",
-        "skill_path": "C:\\Rea\\.agents\\skills\\reverse-engineer-anything",
-        "mcp_command": "npx -y rea-agents@latest mcp",
-        "analyze_native_libs": true,
-        "analyze_dex": false,
-        "pattern_search": true,
-        "max_analysis_time_sec": 300,
-        "ghidra_scripts": []
-    },
-    "gui": {
-        "theme": "system",
-        "window_size": "1200x800",
-        "font_size": 10,
-        "auto_scroll_logs": true,
-        "show_tooltips": true
-    },
-    "logging": {
-        "level": "INFO",
-        "json_output": false,
-        "include_timestamp": true,
-        "correlation_ids": true
+    "permission_weights": {
+      "critical": 15,
+      "high": 8,
+      "medium": 4,
+      "low": 1,
+      "info": 0
     }
+  },
+  "scanner": {
+    "stage_weights": {
+      "archive": 5,
+      "extract": 10,
+      "manifest": 20,
+      "dex": 30,
+      "jadx": 40,
+      "smali": 50,
+      "native": 60,
+      "jni": 65,
+      "strings": 70,
+      "permissions": 75,
+      "behavior": 80,
+      "network": 85,
+      "malware": 90,
+      "risk": 95,
+      "ai": 98,
+      "complete": 100,
+      "rea": 67
+    },
+    "parallel_stages": {
+      "enabled": false,
+      "max_workers": 4,
+      "parallel_groups": [
+        [
+          "dex",
+          "jadx",
+          "smali"
+        ],
+        [
+          "native",
+          "strings"
+        ],
+        [
+          "permissions",
+          "behavior",
+          "network"
+        ]
+      ]
+    },
+    "cache": {
+      "enabled": true,
+      "cache_dir": ".apkstudio_cache",
+      "max_age_days": 30,
+      "max_size_mb": 2000
+    }
+  },
+  "behavior": {
+    "min_confidence": 30,
+    "min_matches_default": 2,
+    "rule_categories": [
+      "suspicious_api_usage",
+      "malware_families",
+      "permission_abuse",
+      "network_iocs",
+      "string_obfuscation",
+      "jni_patterns"
+    ]
+  },
+  "network": {
+    "dga_entropy_threshold": 4.0,
+    "dga_min_length": 12,
+    "dynamic_dns_providers": [
+      "no-ip.com",
+      "dyndns.org",
+      "duckdns.org",
+      "freedns.afraid.org",
+      "changeip.com",
+      "dnsdynamic.org",
+      "hopto.org",
+      "ddns.net"
+    ],
+    "suspicious_tlds": [
+      "tk",
+      "ml",
+      "ga",
+      "cf",
+      "gq",
+      "xyz",
+      "top",
+      "club",
+      "work",
+      "online"
+    ],
+    "cert_pinning_keywords": [
+      "CertificatePinner",
+      "pinning",
+      "sha256/",
+      "trustManager",
+      "X509TrustManager"
+    ]
+  },
+  "string_analysis": {
+    "xor_keys_to_try": [
+      85,
+      170,
+      255,
+      0,
+      51,
+      204
+    ],
+    "encoding_detection": {
+      "base64": true,
+      "hex": true,
+      "xor_single_byte": true,
+      "string_concatenation": true,
+      "reflection_based": true
+    }
+  },
+  "reporting": {
+    "html_template": "embedded",
+    "include_raw_xml": true,
+    "include_all_strings": false,
+    "max_evidence_per_category": 20,
+    "collapsible_sections": true
+  },
+  "gui": {
+    "theme": "dark",
+    "window_size": "1200x800",
+    "font_size": 10,
+    "auto_scroll_logs": true,
+    "show_tooltips": true
+  },
+  "rea": {
+    "enabled": true,
+    "ghidra_path": "D:\\rea\\tools\\ghidra_12.1.4_PUBLIC",
+    "skill_path": "C:\\Rea\\.agents\\skills\\reverse-engineer-anything",
+    "mcp_command": "npx -y rea-agents@latest mcp",
+    "analyze_native_libs": true,
+    "analyze_dex": false,
+    "pattern_search": true,
+    "max_analysis_time_sec": 300,
+    "ghidra_scripts": []
+  },
+  "forensics": {
+    "enabled": false,
+    "cases_dir": "./forensic_cases",
+    "artifacts_dir": "./extracted_artifacts",
+    "audit_dir": "./audit_logs",
+    "reports_dir": "./forensic_reports",
+    "containers_dir": "./evidence_containers",
+    "create_case_per_scan": true,
+    "extract_artifacts": true,
+    "build_timeline": true,
+    "verify_integrity": true,
+    "check_standards": true,
+    "generate_report": true,
+    "create_container": true,
+    "standards": [
+      "nist_sp_800_86",
+      "iso_iec_27037"
+    ],
+    "report_template": "full_forensic",
+    "report_format": "html",
+    "container_format": "custom",
+    "classification": "CONFIDENTIAL",
+    "examiner_name": "APKStudioAI 2.1",
+    "examiner_organization": "APKStudioAI"
+  },
+  "logging": {
+    "level": "INFO",
+    "json_output": false,
+    "include_timestamp": true,
+    "correlation_ids": true,
+    "file": "apkstudio.log"
+  },
+  "general": {},
+  "ai": {
+    "ollama_host": "http://localhost:11434",
+    "default_model": "qwen2.5-coder:3b",
+    "chroma_path": "./chroma_db"
+  },
+  "dynamic": {
+    "avd_name": "apkstudio_avd",
+    "emulator_path": "emulator"
+  },
+  "threat_intel": {
+    "virustotal_key": "a818b5c982e1188a82ab9945445566d56c05d6230e1845d4dde8269fc3f15b43"
+  },
+  "storage": {
+    "evidence_db": "evidence.db"
+  }
 }

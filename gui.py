@@ -77,6 +77,7 @@ class APKStudioGUI:
         tools_menu = tk.Menu(menubar, tearoff=0)
         menubar.add_cascade(label="Outils", menu=tools_menu)
         tools_menu.add_command(label="Vérifier les outils", command=self._check_tools_status)
+        tools_menu.add_command(label="Configuration IA (Backend)", command=self._configure_ai_backend)
         tools_menu.add_command(label="Configuration Ollama", command=self._configure_ollama)
         tools_menu.add_command(label="Diagnostiquer", command=self._run_diagnostic)
 
@@ -1544,6 +1545,123 @@ class APKStudioGUI:
             dialog.destroy()
 
         ttk.Button(dialog, text="Enregistrer", command=save).pack(pady=20)
+
+    def _configure_ai_backend(self):
+        """AI Backend selection dialog"""
+        config = self._load_config()
+        freellmapi_cfg = config.get("freellmapi", {})
+        ollama_cfg = config.get("ollama", {})
+
+        dialog = tk.Toplevel(self.root)
+        dialog.title("Configuration IA - Backend Selection")
+        dialog.geometry("500x450")
+        dialog.transient(self.root)
+        dialog.grab_set()
+
+        # Backend selection
+        ttk.Label(dialog, text="Choisir le backend IA:", font=('Segoe UI', 10, 'bold')).pack(pady=10)
+
+        backend_var = tk.StringVar(value=config.get("ai_backend", "auto"))
+
+        # Backend options with descriptions
+        backends = [
+            ("auto", "🔄 Auto (Recommandé)", "Essaie FreeLLMAPI → Ollama → Rule-based"),
+            ("freellmapi", "☁️ FreeLLMAPI", "API agrégée gratuite (port 3001) - 1313 modèles"),
+            ("ollama", "🦙 Ollama Local", "Modèle local qwen2.5-coder:3b (port 11434)"),
+            ("rule_based", "📋 Rule-based", "Analyse sans IA - Moteur de règles intégré"),
+            ("disabled", "🚫 Désactivé", "Pas d'analyse IA"),
+        ]
+
+        backend_frame = ttk.Frame(dialog)
+        backend_frame.pack(fill='x', padx=20, pady=5)
+
+        for value, label, desc in backends:
+            rb = ttk.Radiobutton(backend_frame, text=label, variable=backend_var, value=value)
+            rb.pack(anchor='w', pady=2)
+            ttk.Label(backend_frame, text=f"  {desc}", font=('Segoe UI', 8), foreground='gray').pack(anchor='w', padx=20)
+
+        # FreeLLMAPI settings
+        fl_frame = ttk.LabelFrame(dialog, text="FreeLLMAPI Settings", padding=10)
+        fl_frame.pack(fill='x', padx=20, pady=10)
+
+        ttk.Label(fl_frame, text="URL API:").grid(row=0, column=0, sticky='w', pady=2)
+        fl_url_var = tk.StringVar(value=freellmapi_cfg.get("api_url", "http://localhost:3001/v1"))
+        ttk.Entry(fl_frame, textvariable=fl_url_var, width=40).grid(row=0, column=1, pady=2, padx=5)
+
+        ttk.Label(fl_frame, text="Modèle:").grid(row=1, column=0, sticky='w', pady=2)
+        fl_model_var = tk.StringVar(value=freellmapi_cfg.get("model", "auto"))
+        ttk.Entry(fl_frame, textvariable=fl_model_var, width=40).grid(row=1, column=1, pady=2, padx=5)
+
+        ttk.Label(fl_frame, text="API Key:").grid(row=2, column=0, sticky='w', pady=2)
+        fl_key_var = tk.StringVar(value=freellmapi_cfg.get("api_key", ""))
+        ttk.Entry(fl_frame, textvariable=fl_key_var, width=40, show='*').grid(row=2, column=1, pady=2, padx=5)
+
+        # Ollama settings
+        oll_frame = ttk.LabelFrame(dialog, text="Ollama Settings", padding=10)
+        oll_frame.pack(fill='x', padx=20, pady=10)
+
+        ttk.Label(oll_frame, text="URL API:").grid(row=0, column=0, sticky='w', pady=2)
+        oll_url_var = tk.StringVar(value=ollama_cfg.get("api_url", "http://127.0.0.1:11434"))
+        ttk.Entry(oll_frame, textvariable=oll_url_var, width=40).grid(row=0, column=1, pady=2, padx=5)
+
+        ttk.Label(oll_frame, text="Modèle:").grid(row=1, column=0, sticky='w', pady=2)
+        oll_model_var = tk.StringVar(value=ollama_cfg.get("model", "qwen2.5-coder:3b"))
+        ttk.Entry(oll_frame, textvariable=oll_model_var, width=40).grid(row=1, column=1, pady=2, padx=5)
+
+        def save():
+            config = self._load_config()
+            config["ai_backend"] = backend_var.get()
+            config["freellmapi"] = {
+                "api_url": fl_url_var.get(),
+                "model": fl_model_var.get(),
+                "api_key": fl_key_var.get(),
+                "timeout": 120,
+                "enabled": True,
+                "fallback_order": "freellmapi,ollama,rule_based",
+                "max_chunk_chars": 8000,
+                "temperature": 0.1,
+                "max_tokens": 4096,
+                "rule_based_fallback": True
+            }
+            config["ollama"] = {
+                "api_url": oll_url_var.get(),
+                "model": oll_model_var.get(),
+                "timeout": 180,
+                "enable_streaming": True,
+                "max_chunk_chars": 8000,
+                "fallback_enabled": True
+            }
+            with open(self.project_dir / 'config.json', 'w') as f:
+                json.dump(config, f, indent=2)
+            self._log(f"Configuration IA mise à jour: {backend_var.get()}", 'success')
+            dialog.destroy()
+
+        def test_backends():
+            """Test backend connectivity"""
+            import requests
+            results = []
+
+            # Test FreeLLMAPI
+            try:
+                r = requests.get(f"{fl_url_var.get()}/models", timeout=5)
+                results.append(f"FreeLLMAPI: {'✓ Connecté' if r.status_code == 200 else '✗ Erreur'}")
+            except Exception as e:
+                results.append(f"FreeLLMAPI: ✗ {e}")
+
+            # Test Ollama
+            try:
+                r = requests.get(f"{oll_url_var.get()}/api/tags", timeout=5)
+                results.append(f"Ollama: {'✓ Connecté' if r.status_code == 200 else '✗ Erreur'}")
+            except Exception as e:
+                results.append(f"Ollama: ✗ {e}")
+
+            messagebox.showinfo("Test Backends", "\n".join(results))
+
+        btn_frame = ttk.Frame(dialog)
+        btn_frame.pack(pady=15)
+        ttk.Button(btn_frame, text="🔍 Tester les backends", command=test_backends).pack(side='left', padx=5)
+        ttk.Button(btn_frame, text="💾 Enregistrer", command=save).pack(side='left', padx=5)
+        ttk.Button(btn_frame, text="Annuler", command=dialog.destroy).pack(side='left', padx=5)
 
     def _run_diagnostic(self):
         """Run diagnostic"""
